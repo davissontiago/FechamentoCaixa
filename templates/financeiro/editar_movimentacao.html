@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+{% load pwa %}
+{% load static %} <html lang="pt-br">
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editar Lançamento</title>
+    <link rel="shortcut icon" href="{% static 'images/icon.png' %}" type="image/png">
+    {% progressive_web_app_meta %}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+
+    <style>
+      :root {
+        --primary: #2563eb;
+        --bg-body: #f3f4f6;
+        --bg-card: #ffffff;
+        --text-main: #1f2937;
+      }
+      body {
+        background-color: var(--bg-body);
+        font-family: 'Inter', sans-serif;
+        display: flex;
+        justify_content: center;
+        align-items: center; /* Centraliza na tela */
+        min-height: 100vh;
+        margin: 0;
+        color: var(--text-main);
+      }
+      .edit-card {
+        background-color: var(--bg-card);
+        width: 90%;
+        max-width: 400px;
+        padding: 25px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+      h2 {
+        margin-top: 0;
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+      }
+      
+      /* Reutilizando estilos dos inputs */
+      select,
+      input[type='number'],
+      input[type='text'] {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background-color: #f9fafb;
+        font-size: 1rem;
+        margin-bottom: 15px;
+        box-sizing: border-box;
+        outline: none;
+      }
+      select:focus,
+      input:focus {
+        border-color: var(--primary);
+        background-color: #fff;
+      }
+      
+      .btn-save {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn-cancel {
+        display: block;
+        text-align: center;
+        margin-top: 15px;
+        color: #6b7280;
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+      /* Formulário Fixo */
+      .add-area {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        max-width: 600px;
+        background: #fff;
+        padding: 15px;
+        border-top: 1px solid #e5e7eb;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+      
+        /* --- A CORREÇÃO MÁGICA --- */
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="edit-card">
+      <h2>Editar Lançamento</h2>
+
+      <form method="post">
+        {% csrf_token %}
+
+        <label style="font-size: 0.9rem; font-weight: 600;">Tipo</label>
+        {{ form.tipo }}
+
+        <label style="font-size: 0.9rem; font-weight: 600;">Nome</label>
+        {{ form.nome }}
+
+        <label style="font-size: 0.9rem; font-weight: 600;">Valor</label>
+        {{ form.valor }}
+
+        <button type="submit" class="btn-save">Salvar Alterações</button>
+      </form>
+
+      <a href="javascript:history.back()" class="btn-cancel">Cancelar</a>
+    </div>
+  </body>
+</html>

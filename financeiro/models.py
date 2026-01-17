@@ -19,7 +19,7 @@ class Movimentacao(models.Model):
     ]
     fechamento = models.ForeignKey(FechamentoCaixa, on_delete=models.CASCADE, related_name='movimentacoes')
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, default='CARTAO')
-    nome = models.CharField(max_length=100) 
+    nome = models.CharField(max_length=100, blank=True, null=True)
     valor = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):

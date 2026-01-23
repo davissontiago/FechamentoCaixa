@@ -6,8 +6,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const btnProx = document.getElementById('btn-proximo');
 
     function handleNavegacao(e) {
-        // Se segurar Ctrl, deixa abrir em nova aba
-        if (e.metaKey || e.ctrlKey) return;
+        if (e.metaKey || e.ctrlKey) return; // Permite abrir em nova aba
         
         e.preventDefault();
         const novaData = this.dataset.dest;
@@ -23,7 +22,6 @@ document.addEventListener("DOMContentLoaded", function() {
         try {
             document.querySelector('.content-area').style.opacity = '0.5';
             
-            // Busca dados JSON
             const response = await fetch(`/api/dados/${dataIso}/`);
             if (!response.ok) throw new Error('Erro na API');
             
@@ -37,7 +35,6 @@ document.addEventListener("DOMContentLoaded", function() {
             btnAnt.href = `/${dados.nav.anterior}/`;
             btnProx.href = `/${dados.nav.proximo}/`;
 
-            // Atualiza URL do navegador
             window.history.pushState({path: dataIso}, '', `/${dataIso}/`);
 
             // 2. Atualiza Saldos
@@ -112,17 +109,45 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // === Salvar Saldo Automaticamente (Apenas o Final) ===
+    // === Salvar Saldo Automaticamente ===
     const inputSaldoFinal = document.getElementById('saldo-final');
     const formSaldos = document.getElementById('form-saldos');
 
     if (inputSaldoFinal && formSaldos) {
+        // Salva ao perder o foco (clicar fora)
         inputSaldoFinal.addEventListener('blur', function () {
-            // Pequeno delay para garantir UX suave
             setTimeout(() => {
                 console.log("Salvando saldo final...");
                 formSaldos.submit();
             }, 200);
+        });
+
+        // NOVO: Corrige o botão "Ir" do teclado do celular
+        inputSaldoFinal.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault(); // Evita o submit padrão bagunçado
+                this.blur(); // Força o evento 'blur' acima, que esconde o teclado e salva
+            }
+        });
+    }
+
+    // === NOVO: Prevenir Duplicação ao Adicionar ===
+    const formAdicionar = document.querySelector('.add-area form');
+    if (formAdicionar) {
+        formAdicionar.addEventListener('submit', function(e) {
+            const btn = this.querySelector('button');
+            
+            // Se já estiver desativado, cancela qualquer novo clique
+            if (btn.disabled) {
+                e.preventDefault();
+                return;
+            }
+
+            // Desativa o botão e muda o visual
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            // Muda o ícone para um spinner rodando
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         });
     }
 
@@ -138,6 +163,5 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Inicializa listeners na carga da página
     ativarListenersDelete();
 });

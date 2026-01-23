@@ -12,79 +12,100 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-
-    <style>
-      /* ... (Mantenha o SEU CSS exatamente como estava antes) ... */
-      :root { --primary: #2563eb; --bg-body: #f3f4f6; --bg-card: #ffffff; --text-main: #1f2937; --success: #10b981; --danger: #ef4444; }
-      body { background-color: var(--bg-body); font-family: 'Inter', sans-serif; display: flex; justify-content: center; min-height: 100vh; margin: 0; color: var(--text-main); }
-      .app-container { background-color: var(--bg-card); width: 100%; max-width: 600px; min-height: 100vh; display: flex; flex-direction: column; position: relative; padding-bottom: 200px; }
-      .header-nav { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); z-index: 10; border-bottom: 1px solid #e5e7eb; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-      .nav-btn { color: var(--primary); text-decoration: none; font-size: 1.2rem; }
-      .date-display { font-weight: 600; display: flex; align-items: center; gap: 10px; }
-      /* ... Styles dos inputs e lista ... */
-      .saldo-block { background-color: #eff6ff; padding: 15px; border-bottom: 1px solid #dbeafe; display: flex; align-items: center; justify-content: space-between; }
-      .saldo-label { font-size: 0.9rem; color: #1e40af; font-weight: 600; }
-      .saldo-input input { background: #fff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px; width: 100px; text-align: right; font-weight: bold; color: #1e40af; }
-      .content-area { padding: 20px; }
-      .line-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
-      .icon-box { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 15px; flex-shrink: 0; }
-      .info-box { flex: 1; }
-      .item-name { font-weight: 600; font-size: 0.95rem; }
-      .item-sub { font-size: 0.8rem; color: #6b7280; }
-      .valor { font-weight: 600; }
-      .resumo-card { background-color: #1f2937; color: #fff; border-radius: 16px; padding: 20px; margin-top: 20px; }
-      .resumo-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; opacity: 0.9; }
-      .resumo-total { border-top: 1px solid #374151; margin-top: 10px; padding-top: 10px; display: flex; justify-content: space-between; font-weight: 700; font-size: 1.3rem; color: #fbbf24; }
-      
-      .add-area { position: fixed; bottom: 0; width: 100%; max-width: 600px; background: #fff; padding: 15px; border-top: 1px solid #e5e7eb; box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05); box-sizing: border-box; left: 50%; transform: translateX(-50%); }
-      .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
-      select, input { width: 100%; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb; outline: none; }
-      .btn-send { background: var(--primary); color: #fff; border: none; border-radius: 8px; width: 50px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-      .btn-action { margin-left: 10px; color: #9ca3af; cursor: pointer; }
-      .btn-action:hover { color: var(--danger); }
-      
-      /* Indicador de Carregamento (Opcional, mas bom para UX) */
-      .htmx-indicator { display:none; opacity: 0; transition: opacity 200ms ease-in;}
-      .htmx-request .htmx-indicator{ display:inline; opacity:1 }
-      .htmx-request.htmx-indicator{ display:inline; opacity:1 }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
-<body> <div class="app-container" hx-boost="true"> 
+<body>
+    <div class="app-container">
         
         <div class="header-nav">
-            <a href="{% url 'caixa_dia' dia_anterior|date:'Y-m-d' %}" class="nav-btn" hx-target="body" hx-push-url="true">
-                <i class="fas fa-chevron-left"></i>
-            </a>
-            
-            <div class="date-display">
-                <img src="{% static 'images/icon.png' %}" alt="Logo" style="height: 24px; width: 24px;">
-                {{ data_atual|date:'d \d\e F' }}
-                <i class="fas fa-spinner fa-spin htmx-indicator" id="spinner"></i>
-            </div>
-            
-            <a href="{% url 'caixa_dia' proximo_dia|date:'Y-m-d' %}" class="nav-btn" hx-target="body" hx-push-url="true">
-                <i class="fas fa-chevron-right"></i>
-            </a>
-            
-            <form action="{% url 'logout' %}" method="post" style="display:inline; margin-left: 10px;" hx-boost="false">
-                {% csrf_token %}
-                <button type="submit" style="background:none; border:none; cursor:pointer; color: #ef4444;">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
-            </form>
+            <a href="{% url 'caixa_dia' dia_anterior|date:'Y-m-d' %}" class="nav-btn"><i class="fas fa-chevron-left"></i></a>
+            <div class="date-display">{{ data_atual|date:'d \d\e F' }}</div>
+            <a href="{% url 'caixa_dia' proximo_dia|date:'Y-m-d' %}" class="nav-btn"><i class="fas fa-chevron-right"></i></a>
         </div>
 
-        <div id="conteudo-dinamico">
-            {% include 'financeiro/partials/conteudo_dia.html' %}
+        <form method="post" id="form-saldos">
+            {% csrf_token %}
+            <input type="hidden" name="btn_saldos" value="1" />
+
+            <div class="saldo-block">
+                <div class="saldo-label">
+                    <i class="fas fa-coins"></i> Iniciou o dia com:
+                </div>
+                <div class="saldo-input">{{ form_saldo.saldo_inicial.as_widget|safe }}</div>
+            </div>
+
+            <div class="saldo-block final">
+                <div class="saldo-label green">
+                    <i class="fas fa-money-bill-wave"></i> Sobrou no final:
+                </div>
+                <div class="saldo-input">{{ form_saldo.saldo_final_fisico.as_widget|safe }}</div>
+            </div>
+        </form>
+
+        <div class="content-area">
+            
+            <div class="movimentacoes-list">
+                {% for mov in movimentacoes %}
+                    <div class="line-item 
+                        {% if mov.tipo == 'CARTAO' %}tipo-cartao
+                        {% elif mov.tipo == 'DINHEIRO' %}tipo-dinheiro
+                        {% else %}tipo-saida{% endif %}">
+                        
+                        <div class="icon-box">
+                            {% if mov.tipo == 'CARTAO' %} <i class="fas fa-credit-card"></i>
+                            {% elif mov.tipo == 'DINHEIRO' %} <i class="fas fa-money-bill-wave"></i>
+                            {% else %} <i class="fas fa-arrow-down"></i> {% endif %}
+                        </div>
+
+                        <div class="info-box">
+                            <div class="item-name">{{ mov.nome }}</div>
+                            <div class="item-sub">
+                                {% if mov.tipo == 'CARTAO' %} Cartão/Pix
+                                {% elif mov.tipo == 'DINHEIRO' %} Entrada Dinheiro
+                                {% else %} Saída/Sangria {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="valor">
+                            {% if mov.tipo == 'SAIDA' %}-{% else %}+{% endif %} 
+                            R$ {{ mov.valor }}
+                        </div>
+
+                        <a href="{% url 'editar_movimentacao' mov.id %}" class="btn-action"><i class="fas fa-pen"></i></a>
+                        <a href="{% url 'deletar_movimentacao' mov.id %}" class="btn-action btn-delete"><i class="fas fa-trash"></i></a>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="resumo-card">
+                <div class="resumo-row">
+                    <span>(+) Vendas Cartão/Pix</span>
+                    <span style="color: #60a5fa;">R$ {{ totais.cartao }}</span>
+                </div>
+                <div class="resumo-row">
+                    <span>(+) Entradas Dinheiro (Extra)</span>
+                    <span style="color: #4ade80;">R$ {{ totais.entradas_esp }}</span>
+                </div>
+                <div class="resumo-row">
+                    <span>(+) Vendas Dinheiro (Calc)</span>
+                    <span style="color: #fbbf24;">R$ {{ totais.dinheiro_miudo }}</span>
+                </div>
+                
+                <div class="resumo-footer">
+                    *Dinheiro = ({{ totais.retiradas }} Retirou + {{ fechamento.saldo_final_fisico }} Sobrou) - ({{ fechamento.saldo_inicial }} Início + {{ totais.entradas_esp }} Extra)
+                </div>
+
+                <div class="resumo-total">
+                    <span>Receita Total</span>
+                    <span>R$ {{ totais.geral }}</span>
+                </div>
+            </div>
+            
+            <div style="height: 100px;" class="spacer-mobile"></div>
         </div>
 
         <div class="add-area">
-            <form hx-post="{% url 'caixa_dia' data_atual|date:'Y-m-d' %}" 
-                  hx-target="#conteudo-dinamico"
-                  hx-swap="outerHTML"
-                  hx-indicator="#spinner"
-                  onsubmit="setTimeout(() => this.reset(), 100);">
+            <form method="post">
                 {% csrf_token %}
                 <input type="hidden" name="btn_movimentacao" value="1" />
 
@@ -97,5 +118,7 @@
             </form>
         </div>
     </div>
+
+    <script src="{% static 'js/scripts.js' %}"></script>
 </body>
 </html>

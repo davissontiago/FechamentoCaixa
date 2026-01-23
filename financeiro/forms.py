@@ -6,13 +6,16 @@ class FechamentoSaldoForm(forms.ModelForm):
         model = FechamentoCaixa
         fields = ['saldo_inicial', 'saldo_final_fisico']
         widgets = {
-            # AQUI ESTÁ A MÁGICA: Adicionamos o atributo readonly
             'saldo_inicial': forms.NumberInput(attrs={
                 'readonly': 'readonly', 
-                'class': 'bg-gray-100 cursor-not-allowed', # Classes visuais (opcional se usar tailwind)
-                'style': 'background-color: #e5e7eb; color: #6b7280;' # Estilo inline para garantir cinza
+                'style': 'background-color: #f3f4f6; color: #6b7280; cursor: not-allowed;'
             }),
-            'saldo_final_fisico': forms.NumberInput(attrs={'step': '0.01'}),
+            # Configuração para o Saldo Final (Máscara)
+            'saldo_final_fisico': forms.TextInput(attrs={
+                'class': 'money-mask', 
+                'inputmode': 'numeric',
+                'placeholder': '0,00'
+            }),
         }
 
 class MovimentacaoRapidaForm(forms.ModelForm):
@@ -21,4 +24,10 @@ class MovimentacaoRapidaForm(forms.ModelForm):
         fields = ['tipo', 'valor', 'nome']
         widgets = {
             'nome': forms.TextInput(attrs={'placeholder': 'Descrição (Ex: Almoço, Sangria...)'}),
+            # Configuração para o Valor da Transação (Máscara)
+            'valor': forms.TextInput(attrs={
+                'class': 'money-mask', 
+                'inputmode': 'numeric', 
+                'placeholder': '0,00'
+            }),
         }

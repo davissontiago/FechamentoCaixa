@@ -122,6 +122,11 @@ body {
 }
 
 /* Lista de Movimentações */
+
+.movimentacoes-list {
+    padding: 0 10px; 
+}
+
 .line-item {
     display: flex;
     align-items: center;
@@ -169,7 +174,7 @@ body {
     color: #fff;
     border-radius: 16px;
     padding: 20px;
-    margin-top: 20px;
+    margin: 20px 4'px;
 }
 
 .resumo-row {

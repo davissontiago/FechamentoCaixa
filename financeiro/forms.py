@@ -6,11 +6,12 @@ class FechamentoSaldoForm(forms.ModelForm):
         model = FechamentoCaixa
         fields = ['saldo_inicial', 'saldo_final_fisico']
         widgets = {
-            'saldo_inicial': forms.NumberInput(attrs={
+            # Saldo Inicial agora é Texto com Máscara (para formatar igual dinheiro)
+            'saldo_inicial': forms.TextInput(attrs={
                 'readonly': 'readonly', 
+                'class': 'money-mask',
                 'style': 'background-color: #f3f4f6; color: #6b7280; cursor: not-allowed;'
             }),
-            # Configuração para o Saldo Final (Máscara)
             'saldo_final_fisico': forms.TextInput(attrs={
                 'class': 'money-mask', 
                 'inputmode': 'numeric',
@@ -24,7 +25,6 @@ class MovimentacaoRapidaForm(forms.ModelForm):
         fields = ['tipo', 'valor', 'nome']
         widgets = {
             'nome': forms.TextInput(attrs={'placeholder': 'Descrição (Ex: Almoço, Sangria...)'}),
-            # Configuração para o Valor da Transação (Máscara)
             'valor': forms.TextInput(attrs={
                 'class': 'money-mask', 
                 'inputmode': 'numeric', 

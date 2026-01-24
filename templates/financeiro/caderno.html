@@ -42,7 +42,10 @@
                     <i class="fas fa-coins"></i> Iniciou o dia com:
                 </div>
                 <div class="saldo-input">
-                    <input type="number" step="0.01" name="saldo_inicial" id="saldo-inicial" class="money-mask"
+                    <input type="text" 
+                           name="saldo_inicial" 
+                           id="saldo-inicial" 
+                           class="money-mask"
                            value="{{ fechamento.saldo_inicial|stringformat:'.2f' }}" 
                            readonly 
                            style="background-color: #f3f4f6; color: #6b7280; cursor: not-allowed;">
@@ -59,21 +62,19 @@
                            name="saldo_final_fisico" 
                            id="saldo-final" 
                            class="money-mask"
-                           onfocus="this.select()"
                            value="{{ fechamento.saldo_final_fisico|stringformat:'.2f' }}">
                 </div>
             </div>
         </form>
 
         <div class="content-area">
-
             <div class="resumo-card">
                 <div class="resumo-row">
                     <span>(+) Vendas Cartão/Pix</span>
                     <span style="color: #60a5fa;" id="val-cartao">R$ {{ totais.cartao }}</span>
                 </div>
                 <div class="resumo-row">
-                    <span>(!) Entradas em Dinheiro</span>
+                    <span>(i) Suprimentos (Reforço)</span>
                     <span style="color: #a78bfa;" id="val-entrada-esp">R$ {{ totais.entradas_esp }}</span>
                 </div>
                 <div class="resumo-row">
@@ -86,7 +87,7 @@
                 </div>
 
                 <div class="resumo-total">
-                    <span>Receita Total (Vendas)</span>
+                    <span>Total (Vendas)</span>
                     <span id="val-geral">R$ {{ totais.geral }}</span>
                 </div>
             </div>
@@ -115,7 +116,6 @@
                     </div>
                 {% endfor %}
             </div>
-            
             <div style="height: 120px;" class="spacer-mobile"></div>
         </div>
 

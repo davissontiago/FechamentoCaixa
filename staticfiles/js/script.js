@@ -1,48 +1,51 @@
 document.addEventListener("DOMContentLoaded", function() {
-    console.log("Sistema de Caixa V5.5 - Máscara Global");
+    console.log("Sistema de Caixa V6.0 - Máscara Total");
 
     // === MÁSCARA DE DINHEIRO GENÉRICA ===
     function aplicarMascaraMoeda(input) {
-        let value = input.value.replace(/\D/g, ""); // Remove não-números
+        // Remove tudo que não é dígito
+        let value = input.value.replace(/\D/g, ""); 
         
         if (value === "") {
-            input.value = "";
+            // Se estiver vazio, não faz nada (ou poderia zerar)
+            // Se for readonly, mantemos vazio se veio vazio
             return;
         }
         
-        // Converte para decimal (1000 -> 10.00)
+        // Divide por 100 para ter os centavos (Ex: 1000 -> 10.00)
         value = (parseInt(value) / 100).toFixed(2) + "";
         
-        // Formata para PT-BR (troca ponto por vírgula, adiciona milhar)
+        // Troca ponto por vírgula e adiciona milhar (Padrão BR)
         value = value.replace(".", ",");
         value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
         
         input.value = value;
     }
 
-    // Inicializa todos os campos de dinheiro
+    // Inicializa todos os inputs de dinheiro (Saldo Inicial, Final e Adicionar)
     const moneyInputs = document.querySelectorAll('.money-mask');
     
     moneyInputs.forEach(input => {
-        // 1. Formata valor inicial (se vier do banco tipo 150.50 vira 150,50)
+        // 1. Formatação Inicial: Pega o valor do banco (ex: 1200.50) e formata (1.200,50)
         if (input.value) {
-            // Remove formatação antiga se houver e garante formato limpo
-            let val = input.value.replace('.', '').replace(',', '');
-            input.value = val;
+            let valCru = input.value.replace('.', '').replace(',', '');
+            input.value = valCru;
             aplicarMascaraMoeda(input);
         }
 
-        // 2. Evento de digitação
-        input.addEventListener('input', function() {
-            aplicarMascaraMoeda(this);
-        });
+        // 2. Formatação ao Digitar
+        if (!input.readOnly) {
+            input.addEventListener('input', function() {
+                aplicarMascaraMoeda(this);
+            });
 
-        // 3. Selecionar tudo ao clicar (facilita edição)
-        input.addEventListener('focus', function() {
-            this.select();
-        });
-        
-        // 4. Se for o Saldo Final, mantém o comportamento de salvar com Enter
+            // 3. Selecionar tudo ao clicar
+            input.addEventListener('focus', function() {
+                this.select();
+            });
+        }
+
+        // 4. Lógica Especial para o Saldo Final (Auto-Save no Blur)
         if (input.id === 'saldo-final') {
              input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter' || e.keyCode === 13) {
@@ -51,7 +54,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             });
              input.addEventListener('blur', function () {
-                // Pequeno delay e força o submit do formulário pai
                 setTimeout(() => {
                     const form = this.closest('form');
                     if (form) dispararSubmitLimpo(form);
@@ -60,19 +62,20 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // === FUNÇÃO PARA LIMPAR E ENVIAR FORMULÁRIOS ===
-    // Intercepta o envio para limpar a máscara (1.000,00 -> 1000.00)
+    // === FUNÇÃO DE ENVIO SEGURO (Limpa formatação antes de enviar) ===
     function dispararSubmitLimpo(form) {
         const inputs = form.querySelectorAll('.money-mask');
         
-        // Cria inputs hidden com os valores limpos para enviar
         inputs.forEach(input => {
             if(input.value) {
-                // Remove pontos de milhar e troca vírgula decimal por ponto
+                // Converte 1.200,50 -> 1200.50 para o Python entender
                 let valorLimpo = input.value.replace(/\./g, "").replace(",", ".");
                 
-                // Verifica se já existe um hidden input para este campo
+                // Cria ou atualiza um campo hidden para enviar o valor limpo
                 let hiddenName = input.name;
+                // Se o input não tiver name (já foi processado), ignorar
+                if (!hiddenName) return;
+
                 let existingHidden = form.querySelector(`input[type="hidden"][name="${hiddenName}"]`);
                 
                 if (existingHidden) {
@@ -85,23 +88,23 @@ document.addEventListener("DOMContentLoaded", function() {
                     form.appendChild(hidden);
                 }
                 
-                // Remove o name do campo visível para não enviar duplicado
+                // Remove o name do campo visual para não enviar lixo pro servidor
                 input.removeAttribute('name');
             }
         });
 
-        console.log("Enviando formulário com valores limpos...");
+        console.log("Enviando dados limpos...");
         form.submit();
     }
 
-    // Intercepta todos os submits de botão (Adicionar / Editar)
+    // Intercepta TODOS os submits (Botão Adicionar e Auto-Save)
     document.querySelectorAll('form').forEach(form => {
-        // Ignora o form de toggle, foca nos que tem input de dinheiro
+        // Só intercepta se tiver campo de dinheiro
         if (form.querySelector('.money-mask')) {
             form.addEventListener('submit', function(e) {
-                e.preventDefault(); // Para o envio padrão
+                e.preventDefault(); // Para o envio normal
                 
-                // Trava botão para evitar duplo clique
+                // Trava o botão para não duplicar
                 const btn = this.querySelector('button');
                 if (btn) {
                     if (btn.disabled) return;
@@ -115,7 +118,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // === NAVEGAÇÃO E SISTEMA (Código Antigo Mantido) ===
+    // === LÓGICA DE NAVEGAÇÃO E TOGGLE (Mantida igual) ===
     const btnAnt = document.getElementById('btn-anterior');
     const btnProx = document.getElementById('btn-proximo');
     const seletorData = document.getElementById('seletor-data');
@@ -184,15 +187,18 @@ document.addEventListener("DOMContentLoaded", function() {
             btnProx.href = `/${dados.nav.proximo}/`;
             window.history.pushState({path: dataIso}, '', `/${dataIso}/`);
 
+            // Atualiza Saldos com formatação
             const inputInicial = document.getElementById('saldo-inicial');
             const inputFinal = document.getElementById('saldo-final');
-            if(inputInicial) inputInicial.value = dados.saldos.inicial.toFixed(2);
             
-            // Atualiza Saldo Final com Máscara
+            if(inputInicial) {
+                let valRaw = (dados.saldos.inicial * 100).toFixed(0);
+                inputInicial.value = valRaw;
+                aplicarMascaraMoeda(inputInicial);
+            }
             if(inputFinal) {
-                // Formata para 1000.00 -> 100000 -> 1.000,00
-                let valorRaw = (dados.saldos.final * 100).toFixed(0); 
-                inputFinal.value = valorRaw;
+                let valRaw = (dados.saldos.final * 100).toFixed(0);
+                inputFinal.value = valRaw;
                 aplicarMascaraMoeda(inputFinal);
             }
 

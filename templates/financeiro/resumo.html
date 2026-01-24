@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumo do Mês</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body style="background-color: #f4f6f8;">
+
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <i class="fas fa-chart-pie"></i> Resumo Financeiro
+        </div>
+        <button class="menu-btn" id="open-menu"><i class="fas fa-bars"></i></button>
+    </nav>
+
+    <div class="sidebar-overlay" id="overlay"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu</span>
+            <button class="menu-btn" id="close-menu"><i class="fas fa-times"></i></button>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="{% url 'home' %}"><i class="fas fa-home"></i> Caixa Diário</a></li>
+            <li><a href="{% url 'resumo_financeiro' %}"><i class="fas fa-chart-line"></i> Relatórios</a></li>
+            <li><a href="/admin/" target="_blank"><i class="fas fa-cog"></i> Administração</a></li>
+            <li><a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+        </ul>
+    </div>
+
+    <div class="app-container" style="padding-top: 20px;">
+        
+        <h2 style="text-align: center; color: #374151; margin-bottom: 20px;">{{ mes_ano }}</h2>
+
+        <div class="dashboard-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="color: #2563eb;"><i class="fas fa-credit-card"></i></div>
+                <div class="kpi-label">Vendas Cartão</div>
+                <div class="kpi-value">R$ {{ total_cartao|floatformat:2 }}</div>
+            </div>
+            
+            <div class="kpi-card">
+                <div class="kpi-icon" style="color: #ef4444;"><i class="fas fa-shopping-basket"></i></div>
+                <div class="kpi-label">Despesas</div>
+                <div class="kpi-value">R$ {{ total_saidas|floatformat:2 }}</div>
+            </div>
+
+            <div class="kpi-card full-width">
+                <div class="kpi-icon" style="color: #d97706;"><i class="fas fa-piggy-bank"></i></div>
+                <div class="kpi-label">Saldo Físico Médio (Dinheiro na Loja)</div>
+                <div class="kpi-value">R$ {{ media_saldo|floatformat:2 }}</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">Evolução do Saldo (Dinheiro)</div>
+            <canvas id="saldoChart"></canvas>
+        </div>
+
+        <div style="height: 100px;"></div>
+    </div>
+
+    <script>
+        // Lógica do Menu
+        const openBtn = document.getElementById('open-menu');
+        const closeBtn = document.getElementById('close-menu');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        function toggleMenu() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        openBtn.addEventListener('click', toggleMenu);
+        closeBtn.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+
+        // Lógica do Gráfico
+        const ctx = document.getElementById('saldoChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_labels|safe }},
+                datasets: [{
+                    label: 'Saldo no Caixa',
+                    data: {{ chart_data|safe }},
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3 // Curva suave
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

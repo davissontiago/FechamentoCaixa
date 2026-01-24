@@ -6,6 +6,7 @@ from django.utils.formats import date_format
 from datetime import timedelta, datetime
 from .models import FechamentoCaixa, Movimentacao
 from .forms import MovimentacaoRapidaForm, FechamentoSaldoForm
+from django.db.models import Sum
 
 # === FUNÇÕES DE NAVEGAÇÃO (PULA DOMINGO) ===
 def obter_dia_anterior(data):
@@ -193,3 +194,52 @@ def editar_movimentacao(request, id):
     else:
         form = MovimentacaoRapidaForm(instance=mov)
     return render(request, 'financeiro/editar_movimentacao.html', {'form': form})
+
+@login_required
+def resumo_financeiro(request):
+    hoje = timezone.now().date()
+    mes_atual = hoje.month
+    ano_atual = hoje.year
+
+    # Filtra fechamentos do mês
+    fechamentos_mes = FechamentoCaixa.objects.filter(
+        data__month=mes_atual, 
+        data__year=ano_atual
+    ).order_by('data')
+
+    # Filtra movimentações do mês
+    movimentacoes_mes = Movimentacao.objects.filter(
+        fechamento__data__month=mes_atual,
+        fechamento__data__year=ano_atual
+    )
+
+    # 1. KPI: Total Vendas Cartão
+    total_cartao = movimentacoes_mes.filter(tipo='CARTAO').aggregate(Sum('valor'))['valor__sum'] or 0
+
+    # 2. KPI: Total Saídas/Despesas
+    total_saidas = movimentacoes_mes.filter(tipo='SAIDA').aggregate(Sum('valor'))['valor__sum'] or 0
+
+    # 3. KPI: Média de Saldo Final (Quanto sobra na gaveta em média)
+    media_saldo = 0
+    count_fechamentos = fechamentos_mes.count()
+    if count_fechamentos > 0:
+        soma_saldos = fechamentos_mes.aggregate(Sum('saldo_final_fisico'))['saldo_final_fisico__sum'] or 0
+        media_saldo = soma_saldos / count_fechamentos
+
+    # 4. DADOS PARA O GRÁFICO DE LINHA (Evolução do Saldo)
+    labels_dias = []
+    data_saldos = []
+    
+    for f in fechamentos_mes:
+        labels_dias.append(f.data.strftime('%d/%m'))
+        data_saldos.append(float(f.saldo_final_fisico))
+
+    return render(request, 'financeiro/resumo.html', {
+        'mes_ano': hoje.strftime('%B / %Y').capitalize(),
+        'total_cartao': total_cartao,
+        'total_saidas': total_saidas,
+        'media_saldo': media_saldo,
+        # Dados para JS (Charts)
+        'chart_labels': labels_dias,
+        'chart_data': data_saldos,
+    })

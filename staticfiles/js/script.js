@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
-    console.log("Sistema de Caixa V7.0 - No Sundays");
+    console.log("Sistema de Caixa V8.0 - Limpo");
 
     // === MÁSCARA DE DINHEIRO GENÉRICA ===
     function aplicarMascaraMoeda(input) {
@@ -13,15 +13,20 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const moneyInputs = document.querySelectorAll('.money-mask');
     moneyInputs.forEach(input => {
+        // 1. Formata valor inicial se houver
         if (input.value) {
             let valCru = input.value.replace('.', '').replace(',', '');
             input.value = valCru;
             aplicarMascaraMoeda(input);
         }
+        
+        // 2. Formata ao digitar
         if (!input.readOnly) {
             input.addEventListener('input', function() { aplicarMascaraMoeda(this); });
             input.addEventListener('focus', function() { this.select(); });
         }
+
+        // 3. Salva Saldo Final ao sair (Blur) ou Enter
         if (input.id === 'saldo-final') {
              input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); this.blur(); }
@@ -35,14 +40,18 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // === FUNÇÃO DE ENVIO SEGURO ===
+    // === FUNÇÃO DE ENVIO SEGURO (LIMPA MÁSCARA ANTES DE ENVIAR) ===
     function dispararSubmitLimpo(form) {
         const inputs = form.querySelectorAll('.money-mask');
         inputs.forEach(input => {
             if(input.value) {
+                // Converte 1.200,50 -> 1200.50
                 let valorLimpo = input.value.replace(/\./g, "").replace(",", ".");
+                
                 let hiddenName = input.name;
                 if (!hiddenName) return;
+
+                // Usa ou cria input hidden para o valor limpo
                 let existingHidden = form.querySelector(`input[type="hidden"][name="${hiddenName}"]`);
                 if (existingHidden) {
                     existingHidden.value = valorLimpo;
@@ -53,6 +62,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     hidden.value = valorLimpo;
                     form.appendChild(hidden);
                 }
+                
+                // Remove name do campo visível para não enviar lixo
                 input.removeAttribute('name');
             }
         });
@@ -60,10 +71,13 @@ document.addEventListener("DOMContentLoaded", function() {
         form.submit();
     }
 
+    // Intercepta todos os submits para limpar valores
     document.querySelectorAll('form').forEach(form => {
         if (form.querySelector('.money-mask')) {
             form.addEventListener('submit', function(e) {
                 e.preventDefault(); 
+                
+                // Trava botão para evitar duplo clique
                 const btn = this.querySelector('button');
                 if (btn) {
                     if (btn.disabled) return;
@@ -71,16 +85,34 @@ document.addEventListener("DOMContentLoaded", function() {
                     btn.style.opacity = '0.7';
                     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                 }
+                
                 dispararSubmitLimpo(this);
             });
         }
     });
 
-    // === NAVEGAÇÃO ===
+    // === NAVEGAÇÃO E MENU (AJUSTADO) ===
     const btnAnt = document.getElementById('btn-anterior');
     const btnProx = document.getElementById('btn-proximo');
     const seletorData = document.getElementById('seletor-data');
 
+    // Menu Hamburguer
+    const openBtn = document.getElementById('open-menu');
+    const closeBtn = document.getElementById('close-menu');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    if (openBtn && closeBtn && sidebar && overlay) {
+        function toggleMenu() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        openBtn.addEventListener('click', toggleMenu);
+        closeBtn.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+    }
+
+    // Navegação Dias
     function handleNavegacao(e) {
         if (e.metaKey || e.ctrlKey) return;
         e.preventDefault();
@@ -98,9 +130,11 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+    // AJAX para Carregar Dia Sem Refresh
     async function carregarDia(dataIso) {
         try {
             document.querySelector('.content-area').style.opacity = '0.5';
+            
             const response = await fetch(`/api/dados/${dataIso}/`);
             if (!response.ok) throw new Error('Erro API');
             const dados = await response.json();
@@ -115,9 +149,10 @@ document.addEventListener("DOMContentLoaded", function() {
             btnProx.href = `/${dados.nav.proximo}/`;
             window.history.pushState({path: dataIso}, '', `/${dataIso}/`);
 
-            // Atualiza Saldos
+            // Atualiza Saldos (com Máscara)
             const inputInicial = document.getElementById('saldo-inicial');
             const inputFinal = document.getElementById('saldo-final');
+            
             if(inputInicial) {
                 let valRaw = (dados.saldos.inicial * 100).toFixed(0);
                 inputInicial.value = valRaw;
@@ -143,14 +178,17 @@ document.addEventListener("DOMContentLoaded", function() {
             // Reconstrói Lista
             const listaDiv = document.getElementById('lista-movimentacoes');
             listaDiv.innerHTML = ''; 
+            
             if (dados.movimentacoes.length === 0) {
                 listaDiv.innerHTML = '<div style="text-align:center; padding: 20px; color: #aaa;">Nenhum lançamento hoje</div>';
             }
+
             dados.movimentacoes.forEach(mov => {
                 let classeCss = 'tipo-saida';
                 let icone = '<i class="fas fa-arrow-down"></i>';
                 let subtexto = 'Saída/Sangria';
                 let sinal = '-';
+
                 if (mov.tipo === 'CARTAO') { classeCss = 'tipo-cartao'; icone = '<i class="fas fa-credit-card"></i>'; subtexto = 'Cartão/Pix'; sinal = '+'; } 
                 else if (mov.tipo === 'DINHEIRO') { classeCss = 'tipo-dinheiro'; icone = '<i class="fas fa-coins"></i>'; subtexto = 'Suprimento/Entrada'; sinal = '+'; }
 

@@ -13,6 +13,27 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <i class="fas fa-wallet"></i> Controle de Caixa
+        </div>
+        <button class="menu-btn" id="open-menu"><i class="fas fa-bars"></i></button>
+    </nav>
+
+    <div class="sidebar-overlay" id="overlay"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu</span>
+            <button class="menu-btn" id="close-menu"><i class="fas fa-times"></i></button>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="{% url 'home' %}"><i class="fas fa-home"></i> Caixa Diário</a></li>
+            <li><a href="{% url 'resumo_financeiro' %}"><i class="fas fa-chart-line"></i> Relatórios</a></li>
+            <li><a href="/admin/"><i class="fas fa-cog"></i> Administração</a></li>
+            <li><a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+        </ul>
+    </div>
+
     <div class="app-container">
         
         <div class="header-nav">

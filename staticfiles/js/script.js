@@ -1,57 +1,30 @@
 document.addEventListener("DOMContentLoaded", function() {
-    console.log("Sistema de Caixa V6.0 - Máscara Total");
+    console.log("Sistema de Caixa V7.0 - No Sundays");
 
     // === MÁSCARA DE DINHEIRO GENÉRICA ===
     function aplicarMascaraMoeda(input) {
-        // Remove tudo que não é dígito
         let value = input.value.replace(/\D/g, ""); 
-        
-        if (value === "") {
-            // Se estiver vazio, não faz nada (ou poderia zerar)
-            // Se for readonly, mantemos vazio se veio vazio
-            return;
-        }
-        
-        // Divide por 100 para ter os centavos (Ex: 1000 -> 10.00)
+        if (value === "") return;
         value = (parseInt(value) / 100).toFixed(2) + "";
-        
-        // Troca ponto por vírgula e adiciona milhar (Padrão BR)
         value = value.replace(".", ",");
         value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-        
         input.value = value;
     }
 
-    // Inicializa todos os inputs de dinheiro (Saldo Inicial, Final e Adicionar)
     const moneyInputs = document.querySelectorAll('.money-mask');
-    
     moneyInputs.forEach(input => {
-        // 1. Formatação Inicial: Pega o valor do banco (ex: 1200.50) e formata (1.200,50)
         if (input.value) {
             let valCru = input.value.replace('.', '').replace(',', '');
             input.value = valCru;
             aplicarMascaraMoeda(input);
         }
-
-        // 2. Formatação ao Digitar
         if (!input.readOnly) {
-            input.addEventListener('input', function() {
-                aplicarMascaraMoeda(this);
-            });
-
-            // 3. Selecionar tudo ao clicar
-            input.addEventListener('focus', function() {
-                this.select();
-            });
+            input.addEventListener('input', function() { aplicarMascaraMoeda(this); });
+            input.addEventListener('focus', function() { this.select(); });
         }
-
-        // 4. Lógica Especial para o Saldo Final (Auto-Save no Blur)
         if (input.id === 'saldo-final') {
              input.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' || e.keyCode === 13) {
-                    e.preventDefault(); 
-                    this.blur(); 
-                }
+                if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); this.blur(); }
             });
              input.addEventListener('blur', function () {
                 setTimeout(() => {
@@ -62,22 +35,15 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // === FUNÇÃO DE ENVIO SEGURO (Limpa formatação antes de enviar) ===
+    // === FUNÇÃO DE ENVIO SEGURO ===
     function dispararSubmitLimpo(form) {
         const inputs = form.querySelectorAll('.money-mask');
-        
         inputs.forEach(input => {
             if(input.value) {
-                // Converte 1.200,50 -> 1200.50 para o Python entender
                 let valorLimpo = input.value.replace(/\./g, "").replace(",", ".");
-                
-                // Cria ou atualiza um campo hidden para enviar o valor limpo
                 let hiddenName = input.name;
-                // Se o input não tiver name (já foi processado), ignorar
                 if (!hiddenName) return;
-
                 let existingHidden = form.querySelector(`input[type="hidden"][name="${hiddenName}"]`);
-                
                 if (existingHidden) {
                     existingHidden.value = valorLimpo;
                 } else {
@@ -87,24 +53,17 @@ document.addEventListener("DOMContentLoaded", function() {
                     hidden.value = valorLimpo;
                     form.appendChild(hidden);
                 }
-                
-                // Remove o name do campo visual para não enviar lixo pro servidor
                 input.removeAttribute('name');
             }
         });
-
         console.log("Enviando dados limpos...");
         form.submit();
     }
 
-    // Intercepta TODOS os submits (Botão Adicionar e Auto-Save)
     document.querySelectorAll('form').forEach(form => {
-        // Só intercepta se tiver campo de dinheiro
         if (form.querySelector('.money-mask')) {
             form.addEventListener('submit', function(e) {
-                e.preventDefault(); // Para o envio normal
-                
-                // Trava o botão para não duplicar
+                e.preventDefault(); 
                 const btn = this.querySelector('button');
                 if (btn) {
                     if (btn.disabled) return;
@@ -112,42 +71,15 @@ document.addEventListener("DOMContentLoaded", function() {
                     btn.style.opacity = '0.7';
                     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                 }
-
                 dispararSubmitLimpo(this);
             });
         }
     });
 
-    // === LÓGICA DE NAVEGAÇÃO E TOGGLE (Mantida igual) ===
+    // === NAVEGAÇÃO ===
     const btnAnt = document.getElementById('btn-anterior');
     const btnProx = document.getElementById('btn-proximo');
     const seletorData = document.getElementById('seletor-data');
-    const checkPularDia = document.getElementById('checkbox-pular-dia');
-    const formToggle = document.getElementById('form-toggle');
-    const inputToggleStatus = document.getElementById('input-toggle-status');
-    const labelPularDia = document.getElementById('label-pular-dia');
-
-    function atualizarVisualToggle(ativado) {
-        if (!labelPularDia) return;
-        if (ativado) {
-            labelPularDia.style.color = '#ef4444';
-            labelPularDia.style.fontWeight = 'bold';
-            labelPularDia.innerText = "Dia Pulado (Fechado)";
-        } else {
-            labelPularDia.style.color = '#6b7280';
-            labelPularDia.style.fontWeight = 'normal';
-            labelPularDia.innerText = "Pular Dia (Loja Fechada)";
-        }
-    }
-
-    if (checkPularDia) {
-        atualizarVisualToggle(checkPularDia.checked);
-        checkPularDia.addEventListener('change', function() {
-            atualizarVisualToggle(this.checked);
-            inputToggleStatus.value = this.checked ? 'true' : 'false';
-            setTimeout(() => { formToggle.submit(); }, 200);
-        });
-    }
 
     function handleNavegacao(e) {
         if (e.metaKey || e.ctrlKey) return;
@@ -173,11 +105,7 @@ document.addEventListener("DOMContentLoaded", function() {
             if (!response.ok) throw new Error('Erro API');
             const dados = await response.json();
 
-            if (checkPularDia) {
-                checkPularDia.checked = dados.loja_fechada;
-                atualizarVisualToggle(dados.loja_fechada);
-            }
-
+            // Atualiza Header e URL
             document.getElementById('display-data').innerHTML = `${dados.data_formatada} <i class="fas fa-caret-down" style="font-size: 0.8em; opacity: 0.5;"></i>`;
             if(seletorData) seletorData.value = dados.data_iso;
 
@@ -187,10 +115,9 @@ document.addEventListener("DOMContentLoaded", function() {
             btnProx.href = `/${dados.nav.proximo}/`;
             window.history.pushState({path: dataIso}, '', `/${dataIso}/`);
 
-            // Atualiza Saldos com formatação
+            // Atualiza Saldos
             const inputInicial = document.getElementById('saldo-inicial');
             const inputFinal = document.getElementById('saldo-final');
-            
             if(inputInicial) {
                 let valRaw = (dados.saldos.inicial * 100).toFixed(0);
                 inputInicial.value = valRaw;
@@ -202,6 +129,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 aplicarMascaraMoeda(inputFinal);
             }
 
+            // Atualiza Resumo
             const fmt = (v) => v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
             document.getElementById('val-cartao').innerText = fmt(dados.totais.cartao);
             document.getElementById('val-entrada-esp').innerText = fmt(dados.totais.entradas_esp);
@@ -212,19 +140,17 @@ document.addEventListener("DOMContentLoaded", function() {
             const formulaElem = document.getElementById('txt-formula');
             if(formulaElem) formulaElem.innerText = txtFormula;
 
+            // Reconstrói Lista
             const listaDiv = document.getElementById('lista-movimentacoes');
             listaDiv.innerHTML = ''; 
-            
             if (dados.movimentacoes.length === 0) {
                 listaDiv.innerHTML = '<div style="text-align:center; padding: 20px; color: #aaa;">Nenhum lançamento hoje</div>';
             }
-
             dados.movimentacoes.forEach(mov => {
                 let classeCss = 'tipo-saida';
                 let icone = '<i class="fas fa-arrow-down"></i>';
                 let subtexto = 'Saída/Sangria';
                 let sinal = '-';
-
                 if (mov.tipo === 'CARTAO') { classeCss = 'tipo-cartao'; icone = '<i class="fas fa-credit-card"></i>'; subtexto = 'Cartão/Pix'; sinal = '+'; } 
                 else if (mov.tipo === 'DINHEIRO') { classeCss = 'tipo-dinheiro'; icone = '<i class="fas fa-coins"></i>'; subtexto = 'Suprimento/Entrada'; sinal = '+'; }
 

@@ -7,32 +7,39 @@ from datetime import timedelta, datetime
 from .models import FechamentoCaixa, Movimentacao
 from .forms import MovimentacaoRapidaForm, FechamentoSaldoForm
 
-# === REGRA DA PONTE E SALDO ===
+# === FUNÇÕES DE NAVEGAÇÃO (PULA DOMINGO) ===
+def obter_dia_anterior(data):
+    # Retrocede 1 dia
+    anterior = data - timedelta(days=1)
+    # Se cair no Domingo (6), retrocede mais um (para Sábado)
+    while anterior.weekday() == 6:
+        anterior -= timedelta(days=1)
+    return anterior
+
+def obter_proximo_dia(data):
+    # Avança 1 dia
+    proximo = data + timedelta(days=1)
+    # Se cair no Domingo (6), avança mais um (para Segunda)
+    while proximo.weekday() == 6:
+        proximo += timedelta(days=1)
+    return proximo
+
 def transportar_saldo_anterior(fechamento_atual):
-    data_ontem = fechamento_atual.data - timedelta(days=1)
-    fechamento_ontem, _ = FechamentoCaixa.objects.get_or_create(data=data_ontem)
+    """
+    Busca o dia útil anterior (ex: Sábado se hoje for Segunda)
+    e copia o saldo final dele para o inicial de hoje.
+    """
+    data_anterior_util = obter_dia_anterior(fechamento_atual.data)
     
-    if data_ontem.weekday() == 6: 
-        fechamento_ontem.loja_fechada = True
+    # Tenta pegar o fechamento desse dia anterior
+    fechamento_anterior = FechamentoCaixa.objects.filter(data=data_anterior_util).first()
     
-    if fechamento_ontem.loja_fechada:
-        if fechamento_ontem.saldo_final_fisico != fechamento_ontem.saldo_inicial:
-            fechamento_ontem.saldo_final_fisico = fechamento_ontem.saldo_inicial
-            fechamento_ontem.save()
-            transportar_saldo_anterior(fechamento_ontem)
-
-    if fechamento_atual.saldo_inicial != fechamento_ontem.saldo_final_fisico:
-        fechamento_atual.saldo_inicial = fechamento_ontem.saldo_final_fisico
-        fechamento_atual.save()
-
-    if fechamento_atual.data.weekday() == 6:
-        fechamento_atual.loja_fechada = True
-    
-    if fechamento_atual.loja_fechada:
-        if fechamento_atual.saldo_final_fisico != fechamento_atual.saldo_inicial:
-            fechamento_atual.saldo_final_fisico = fechamento_atual.saldo_inicial
+    if fechamento_anterior:
+        # Se o saldo inicial de hoje estiver diferente do final de "ontem", atualiza
+        if fechamento_atual.saldo_inicial != fechamento_anterior.saldo_final_fisico:
+            fechamento_atual.saldo_inicial = fechamento_anterior.saldo_final_fisico
             fechamento_atual.save()
-
+            
     return fechamento_atual
 
 @login_required
@@ -45,8 +52,14 @@ def diario_caixa(request, data_iso=None):
     else:
         data_atual = timezone.now().date()
     
-    dia_anterior = data_atual - timedelta(days=1)
-    proximo_dia = data_atual + timedelta(days=1)
+    # SE FOR DOMINGO, REDIRECIONA PARA SEGUNDA
+    if data_atual.weekday() == 6:
+        proximo_util = obter_proximo_dia(data_atual)
+        return redirect('caixa_dia', data_iso=proximo_util.strftime('%Y-%m-%d'))
+
+    # Calcula navegação pulando domingo
+    dia_anterior = obter_dia_anterior(data_atual)
+    proximo_dia = obter_proximo_dia(data_atual)
 
     fechamento, _ = FechamentoCaixa.objects.get_or_create(data=data_atual)
     transportar_saldo_anterior(fechamento)
@@ -55,47 +68,34 @@ def diario_caixa(request, data_iso=None):
     form_saldo = FechamentoSaldoForm(instance=fechamento)
 
     if request.method == 'POST':
-        if 'toggle_status' in request.POST:
-            status = request.POST.get('toggle_status')
-            fechamento.loja_fechada = (status == 'true')
-            transportar_saldo_anterior(fechamento)
-            fechamento.save()
-            return redirect(request.path)
-
-        elif 'btn_movimentacao' in request.POST:
+        # Removemos a lógica de 'toggle_status' pois não existe mais botão
+        
+        if 'btn_movimentacao' in request.POST:
             form_mov = MovimentacaoRapidaForm(request.POST)
             if form_mov.is_valid():
                 nova_mov = form_mov.save(commit=False)
                 nova_mov.fechamento = fechamento
                 nova_mov.save()
-                if fechamento.loja_fechada:
-                    fechamento.loja_fechada = False
-                    fechamento.save()
                 return redirect(request.path)
         
         elif 'btn_saldos' in request.POST:
             form_saldo = FechamentoSaldoForm(request.POST, instance=fechamento)
             if form_saldo.is_valid():
                 obj = form_saldo.save(commit=False)
-                transportar_saldo_anterior(obj) 
+                transportar_saldo_anterior(obj) # Garante integridade
                 obj.save()
                 return redirect(request.path)
 
-    # === CÁLCULOS CORRIGIDOS ===
+    # Cálculos (Mantendo a lógica de Suprimento separada que fizemos antes)
     movs = fechamento.movimentacoes.all().order_by('id')
     vendas_cartao = sum(m.valor for m in movs if m.tipo == 'CARTAO')
-    
-    # Entradas agora são SUPRIMENTOS (soma com inicial), não vendas
     suprimentos = sum(m.valor for m in movs if m.tipo == 'DINHEIRO')
     retiradas = sum(m.valor for m in movs if m.tipo == 'SAIDA')
     
-    # Lógica: (Final + Saídas) - (Inicial + Suprimentos) = Venda Calc
     dinheiro_disponivel = fechamento.saldo_inicial + suprimentos
     miudos = (retiradas + fechamento.saldo_final_fisico) - dinheiro_disponivel
     if miudos < 0: miudos = 0
     
-    # Total Geral = Apenas o que é VENDA (Cartão + Dinheiro Calc)
-    # Suprimentos NÃO entra aqui
     total_geral = vendas_cartao + miudos
 
     return render(request, 'financeiro/caderno.html', {
@@ -109,7 +109,7 @@ def diario_caixa(request, data_iso=None):
         'form_saldo': form_saldo,
         'totais': {
             'cartao': vendas_cartao,
-            'entradas_esp': suprimentos, # Renomeei na lógica, mas mantenho a chave pro template
+            'entradas_esp': suprimentos,
             'retiradas': retiradas,
             'dinheiro_miudo': miudos,
             'geral': total_geral
@@ -123,16 +123,19 @@ def api_dados_caixa(request, data_iso):
     except ValueError:
         return JsonResponse({'erro': 'Data inválida'}, status=400)
 
-    dia_anterior_str = (data_atual - timedelta(days=1)).strftime('%Y-%m-%d')
-    proximo_dia_str = (data_atual + timedelta(days=1)).strftime('%Y-%m-%d')
+    # Se a API pedir domingo, redireciona a logica para segunda (ou devolve erro, mas vamos ajustar os links)
+    if data_atual.weekday() == 6:
+        data_atual = obter_proximo_dia(data_atual)
+        data_iso = data_atual.strftime('%Y-%m-%d')
+
+    dia_anterior_str = obter_dia_anterior(data_atual).strftime('%Y-%m-%d')
+    proximo_dia_str = obter_proximo_dia(data_atual).strftime('%Y-%m-%d')
 
     fechamento, _ = FechamentoCaixa.objects.get_or_create(data=data_atual)
     transportar_saldo_anterior(fechamento)
     
     movs = fechamento.movimentacoes.all()
     vendas_cartao = sum(m.valor for m in movs if m.tipo == 'CARTAO')
-    
-    # Correção na API também
     suprimentos = sum(m.valor for m in movs if m.tipo == 'DINHEIRO')
     retiradas = sum(m.valor for m in movs if m.tipo == 'SAIDA')
     
@@ -140,7 +143,7 @@ def api_dados_caixa(request, data_iso):
     miudos = (retiradas + fechamento.saldo_final_fisico) - dinheiro_disponivel
     if miudos < 0: miudos = 0
     
-    total_geral = vendas_cartao + miudos # Suprimentos removido daqui
+    total_geral = vendas_cartao + miudos
 
     lista_movs = []
     for mov in movs.order_by('id'):
@@ -158,7 +161,7 @@ def api_dados_caixa(request, data_iso):
     return JsonResponse({
         'data_formatada': data_texto,
         'data_iso': data_iso,
-        'loja_fechada': fechamento.loja_fechada,
+        # Removemos 'loja_fechada' daqui pois não é mais usada
         'nav': {'anterior': dia_anterior_str, 'proximo': proximo_dia_str, 'atual': data_iso},
         'saldos': {'inicial': float(fechamento.saldo_inicial), 'final': float(fechamento.saldo_final_fisico)},
         'totais': {
@@ -171,7 +174,7 @@ def api_dados_caixa(request, data_iso):
         'movimentacoes': lista_movs
     })
 
-# (Mantenha deletar_movimentacao e editar_movimentacao como estão)
+# As views de deletar e editar permanecem iguais
 @login_required
 def deletar_movimentacao(request, id):
     mov = get_object_or_404(Movimentacao, id=id)

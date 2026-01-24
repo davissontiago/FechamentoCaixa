@@ -87,7 +87,7 @@
                 </div>
 
                 <div class="resumo-total">
-                    <span>Total (Vendas)</span>
+                    <span>Receita Total (Vendas)</span>
                     <span id="val-geral">R$ {{ totais.geral }}</span>
                 </div>
             </div>
@@ -120,18 +120,6 @@
         </div>
 
         <div class="add-area">
-            <div class="toggle-wrapper" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
-                <span class="toggle-label" id="label-pular-dia" style="font-size: 0.9rem; color: #6b7280;">Pular Dia (Loja Fechada)</span>
-                <label class="switch">
-                    <form method="post" id="form-toggle" style="display: none;">
-                        {% csrf_token %}
-                        <input type="hidden" name="toggle_status" id="input-toggle-status" value="false">
-                    </form>
-                    <input type="checkbox" id="checkbox-pular-dia" {% if fechamento.loja_fechada %}checked{% endif %}>
-                    <span class="slider"></span>
-                </label>
-            </div>
-
             <form method="post">
                 {% csrf_token %}
                 <input type="hidden" name="btn_movimentacao" value="1" />

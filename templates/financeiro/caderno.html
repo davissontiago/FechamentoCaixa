@@ -131,7 +131,7 @@
                             </div>
                         </div>
                         <div class="valor">
-                            {% if mov.tipo == 'SAIDA' %}-{% elif mov.tipo == 'REGISTRO' %}&nbsp;{% else %}+{% endif %} R$ {{ mov.valor }}
+                            {% if mov.tipo == 'SAIDA' %}-{% elif mov.tipo == 'REGISTRO' %}-{% else %}+{% endif %} R$ {{ mov.valor }}
                         </div>
                         <a href="{% url 'editar_movimentacao' mov.id %}" class="btn-action"><i class="fas fa-pen"></i></a>
                         <a href="{% url 'deletar_movimentacao' mov.id %}" class="btn-action btn-delete"><i class="fas fa-trash"></i></a>

@@ -204,7 +204,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
                 else if (mov.tipo === 'REGISTRO') { 
                     classeCss = 'tipo-registro'; 
-                    icone = '<i class="fas fa-info"></i>'; 
+                    icone = '<i class="fas fa-file-alt"></i>'; 
                     subtexto = 'Apenas Registro'; 
                     sinal = '-';
                 }

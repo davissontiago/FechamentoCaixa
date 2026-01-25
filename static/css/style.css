@@ -257,6 +257,9 @@ body {
 .tipo-dinheiro .icon-box { background-color: #d1fae5; color: var(--success); }
 .tipo-saida .icon-box { background-color: #fee2e2; color: var(--danger); }
 
+.tipo-registro .icon-box { background-color: #f3f4f6; color: #0b0b0b; }
+.tipo-registro .valor { color: #202122; font-weight: normal; }
+
 .tipo-cartao .valor { color: #2563eb; }
 .tipo-dinheiro .valor { color: var(--success); }
 .tipo-saida .valor { color: var(--danger); }

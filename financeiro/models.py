@@ -15,7 +15,8 @@ class Movimentacao(models.Model):
     TIPO_CHOICES = [
         ('DINHEIRO', 'Entrada Dinheiro'),
         ('CARTAO', 'Cartão/Pix'),
-        ('SAIDA', 'Saída/Sangria'),
+        ('SAIDA', 'Saída do Caixa'),
+        ('REGISTRO', 'Registro'),
     ]
     fechamento = models.ForeignKey(FechamentoCaixa, on_delete=models.CASCADE, related_name='movimentacoes')
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)

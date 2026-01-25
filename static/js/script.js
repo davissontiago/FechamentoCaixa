@@ -189,8 +189,25 @@ document.addEventListener("DOMContentLoaded", function() {
                 let subtexto = 'Saída/Sangria';
                 let sinal = '-';
 
-                if (mov.tipo === 'CARTAO') { classeCss = 'tipo-cartao'; icone = '<i class="fas fa-credit-card"></i>'; subtexto = 'Cartão/Pix'; sinal = '+'; } 
-                else if (mov.tipo === 'DINHEIRO') { classeCss = 'tipo-dinheiro'; icone = '<i class="fas fa-coins"></i>'; subtexto = 'Suprimento/Entrada'; sinal = '+'; }
+                // Verificações de Tipo
+                if (mov.tipo === 'CARTAO') { 
+                    classeCss = 'tipo-cartao'; 
+                    icone = '<i class="fas fa-credit-card"></i>'; 
+                    subtexto = 'Cartão/Pix'; 
+                    sinal = '+'; 
+                } 
+                else if (mov.tipo === 'DINHEIRO') { 
+                    classeCss = 'tipo-dinheiro'; 
+                    icone = '<i class="fas fa-coins"></i>'; 
+                    subtexto = 'Suprimento/Entrada'; 
+                    sinal = '+'; 
+                }
+                else if (mov.tipo === 'REGISTRO') { 
+                    classeCss = 'tipo-registro'; 
+                    icone = '<i class="fas fa-info"></i>'; 
+                    subtexto = 'Apenas Registro'; 
+                    sinal = '-';
+                }
 
                 const htmlItem = `
                     <div class="line-item ${classeCss}">

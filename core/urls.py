@@ -19,8 +19,7 @@ urlpatterns = [
 
     # === Rotas de Navegação (Devem ficar por último) ===
     path('', diario_caixa, name='home'),
-    # Esta rota captura "qualquer coisa" como data, por isso tem de ser a última
-    path('caixa/<str:data_iso>/', diario_caixa, name='caixa_dia'),
-    # Se você estiver usando URLs curtas (ex: /2024-01-01/), use esta linha abaixo no lugar da de cima:
-    # path('<str:data_iso>/', diario_caixa, name='caixa_dia'), 
+    
+    # ESTA É A CORREÇÃO: Removemos o 'caixa/' do início para aceitar '/2026-01-26/'
+    path('<str:data_iso>/', diario_caixa, name='caixa_dia'),
 ]

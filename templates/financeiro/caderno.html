@@ -14,121 +14,79 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="navbar-brand">
-            <i class="fas fa-wallet"></i> Controle de Caixa
-        </div>
+        <div class="navbar-brand"><i class="fas fa-wallet"></i> Controle de Caixa</div>
         <button class="menu-btn" id="open-menu"><i class="fas fa-bars"></i></button>
     </nav>
-
     <div class="sidebar-overlay" id="overlay"></div>
     <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <span>Menu</span>
-            <button class="menu-btn" id="close-menu"><i class="fas fa-times"></i></button>
-        </div>
+        <div class="sidebar-header"><span>Menu</span><button class="menu-btn" id="close-menu"><i class="fas fa-times"></i></button></div>
         <ul class="sidebar-menu">
             <li><a href="{% url 'home' %}"><i class="fas fa-home"></i> Caixa Diário</a></li>
             <li><a href="{% url 'resumo_financeiro' %}"><i class="fas fa-chart-line"></i> Relatórios</a></li>
+            <li><a href="{% url 'gerenciar_categorias' %}"><i class="fas fa-tags"></i> Categorias</a></li>
             <li><a href="/admin/"><i class="fas fa-cog"></i> Administração</a></li>
             <li><a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
         </ul>
     </div>
 
     <div class="app-container">
-        
         <div class="header-nav">
-            <a href="{% url 'caixa_dia' dia_anterior|date:'Y-m-d' %}" id="btn-anterior" class="nav-btn" data-dest="{{ dia_anterior|date:'Y-m-d' }}">
-                <i class="fas fa-chevron-left"></i>
-            </a>
-            
+            <a href="{% url 'caixa_dia' dia_anterior|date:'Y-m-d' %}" id="btn-anterior" class="nav-btn" data-dest="{{ dia_anterior|date:'Y-m-d' }}"><i class="fas fa-chevron-left"></i></a>
             <div style="position: relative; display: inline-block; cursor: pointer;">
-                <div class="date-display" id="display-data" style="text-transform: capitalize;">
-                    {{ data_atual|date:'l, d \d\e F' }} <i class="fas fa-caret-down" style="font-size: 0.8em; opacity: 0.5;"></i>
-                </div>
-                <input type="date" id="seletor-data" value="{{ data_atual_iso }}" 
-                       style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+                <div class="date-display" id="display-data" style="text-transform: capitalize;">{{ data_atual|date:'l, d \d\e F' }} <i class="fas fa-caret-down" style="font-size: 0.8em; opacity: 0.5;"></i></div>
+                <input type="date" id="seletor-data" value="{{ data_atual_iso }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
             </div>
-            
-            <a href="{% url 'caixa_dia' proximo_dia|date:'Y-m-d' %}" id="btn-proximo" class="nav-btn" data-dest="{{ proximo_dia|date:'Y-m-d' }}">
-                <i class="fas fa-chevron-right"></i>
-            </a>
+            <a href="{% url 'caixa_dia' proximo_dia|date:'Y-m-d' %}" id="btn-proximo" class="nav-btn" data-dest="{{ proximo_dia|date:'Y-m-d' }}"><i class="fas fa-chevron-right"></i></a>
         </div>
 
         <form method="post" id="form-saldos">
             {% csrf_token %}
             <input type="hidden" name="btn_saldos" value="1" />
-
             <div class="saldo-block">
-                <div class="saldo-label">
-                    <i class="fas fa-coins"></i> Iniciou o dia com:
-                </div>
+                <div class="saldo-label"><i class="fas fa-coins"></i> Iniciou o dia com:</div>
                 <div class="saldo-input">
-                    <input type="text" 
-                           name="saldo_inicial" 
-                           id="saldo-inicial" 
-                           class="money-mask"
-                           value="{{ fechamento.saldo_inicial|stringformat:'.2f' }}" 
-                           readonly 
-                           style="background-color: #f3f4f6; color: #6b7280; cursor: not-allowed;">
+                    <input type="text" name="saldo_inicial" id="saldo-inicial" class="money-mask" value="{{ fechamento.saldo_inicial|stringformat:'.2f' }}" readonly style="background-color: #f3f4f6; color: #6b7280; cursor: not-allowed;">
                 </div>
             </div>
-
             <div class="saldo-block final">
-                <div class="saldo-label green">
-                    <i class="fas fa-money-bill-wave"></i> Sobrou no final:
-                </div>
+                <div class="saldo-label green"><i class="fas fa-money-bill-wave"></i> Sobrou no final:</div>
                 <div class="saldo-input">
-                    <input type="text" 
-                           inputmode="numeric" 
-                           name="saldo_final_fisico" 
-                           id="saldo-final" 
-                           class="money-mask"
-                           value="{{ fechamento.saldo_final_fisico|stringformat:'.2f' }}">
+                    <input type="text" inputmode="numeric" name="saldo_final_fisico" id="saldo-final" class="money-mask" value="{{ fechamento.saldo_final_fisico|stringformat:'.2f' }}">
                 </div>
             </div>
         </form>
 
         <div class="content-area">
             <div class="resumo-card">
-                <div class="resumo-row">
-                    <span>(+) Vendas Cartão/Pix</span>
-                    <span style="color: #60a5fa;" id="val-cartao">R$ {{ totais.cartao }}</span>
-                </div>
-                <div class="resumo-row">
-                    <span>(i) Suprimentos (Reforço)</span>
-                    <span style="color: #a78bfa;" id="val-entrada-esp">R$ {{ totais.entradas_esp }}</span>
-                </div>
-                <div class="resumo-row">
-                    <span>(+) Vendas Dinheiro (Calc)</span>
-                    <span style="color: #fbbf24;" id="val-dinheiro-calc">R$ {{ totais.dinheiro_miudo }}</span>
-                </div>
-                
-                <div class="resumo-footer" id="txt-formula">
-                    *Dinheiro = ({{ totais.retiradas }} Saídas + {{ fechamento.saldo_final_fisico }} Sobrou) - ({{ fechamento.saldo_inicial }} Início + {{ totais.entradas_esp }} Suprimentos)
-                </div>
-
-                <div class="resumo-total">
-                    <span>Receita Total (Vendas)</span>
-                    <span id="val-geral">R$ {{ totais.geral }}</span>
-                </div>
+                <div class="resumo-row"><span>(+) Vendas Cartão/Pix</span><span style="color: #60a5fa;" id="val-cartao">R$ {{ totais.cartao }}</span></div>
+                <div class="resumo-row"><span>(i) Suprimentos (Reforço)</span><span style="color: #a78bfa;" id="val-entrada-esp">R$ {{ totais.entradas_esp }}</span></div>
+                <div class="resumo-row"><span>(+) Vendas Dinheiro (Calc)</span><span style="color: #fbbf24;" id="val-dinheiro-calc">R$ {{ totais.dinheiro_miudo }}</span></div>
+                <div class="resumo-footer" id="txt-formula">*Dinheiro = ({{ totais.retiradas }} Saídas + {{ fechamento.saldo_final_fisico }} Sobrou) - ({{ fechamento.saldo_inicial }} Início + {{ totais.entradas_esp }} Suprimentos)</div>
+                <div class="resumo-total"><span>Receita Total (Vendas)</span><span id="val-geral">R$ {{ totais.geral }}</span></div>
             </div>
 
             <div class="movimentacoes-list" id="lista-movimentacoes">
                 {% for mov in movimentacoes %}
-                    <div class="line-item {% if mov.tipo == 'CARTAO' %}tipo-cartao{% elif mov.tipo == 'DINHEIRO' %}tipo-dinheiro{% elif mov.tipo == 'REGISTRO' %}tipo-registro{% else %}tipo-saida{% endif %}">
+                    <div class="line-item {% if mov.tipo == 'CARTAO' %}tipo-cartao{% elif mov.tipo == 'DINHEIRO' %}tipo-dinheiro{% elif mov.tipo == 'REGISTRO' %}tipo-registro{% else %}tipo-saida{% endif %}" onclick="toggleDesc(this)">
                         <div class="icon-box">
                             {% if mov.tipo == 'CARTAO' %} <i class="fas fa-credit-card"></i>
                             {% elif mov.tipo == 'DINHEIRO' %} <i class="fas fa-coins"></i>
-                            {% elif mov.tipo == 'REGISTRO' %} <i class="fas fa-file-lines"></i> {% else %} <i class="fas fa-arrow-down"></i> {% endif %}
+                            {% elif mov.tipo == 'REGISTRO' %} <i class="fas fa-file-alt"></i>
+                            {% else %} <i class="fas fa-arrow-down"></i> {% endif %}
                         </div>
                         <div class="info-box">
-                            <div class="item-name">{{ mov.nome }}</div>
+                            <div class="item-name">{{ mov.categoria.nome }}</div>
                             <div class="item-sub">
                                 {% if mov.tipo == 'CARTAO' %} Cartão/Pix
                                 {% elif mov.tipo == 'DINHEIRO' %} Suprimento/Entrada
-                                {% elif mov.tipo == 'REGISTRO' %} Apenas Registro
+                                {% elif mov.tipo == 'REGISTRO' %} Registro
                                 {% else %} Saída/Sangria {% endif %}
                             </div>
+                            {% if mov.descricao %}
+                                <div class="item-desc" style="display:none; font-size: 0.85rem; color: #6b7280; margin-top: 4px; font-style: italic;">
+                                    <i class="fas fa-quote-left" style="font-size: 0.7em;"></i> {{ mov.descricao }}
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="valor">
                             {% if mov.tipo == 'SAIDA' %}-{% elif mov.tipo == 'REGISTRO' %}-{% else %}+{% endif %} R$ {{ mov.valor }}
@@ -146,15 +104,63 @@
                 {% csrf_token %}
                 <input type="hidden" name="btn_movimentacao" value="1" />
                 <div class="form-row">
-                    <div style="flex: 1.5;">{{ form_mov.tipo }}</div> 
+                    <div style="flex: 1;">{{ form_mov.tipo }}</div> 
                     <div style="flex: 1;">{{ form_mov.valor }}</div>
+                </div>
+                <div class="form-row" style="align-items: center;">
+                    <div style="flex: 2;">{{ form_mov.categoria }}</div>
+                    <a href="{% url 'gerenciar_categorias' %}" style="background: #e5e7eb; padding: 10px; border-radius: 8px; color: #374151; margin-left: 5px;"><i class="fas fa-plus"></i></a>
+                </div>
+                <div class="form-row">
+                    <div style="flex: 1;">{{ form_mov.descricao }}</div>
                     <button class="btn-send"><i class="fas fa-plus"></i></button>
                 </div>
-                <div>{{ form_mov.nome }}</div>
             </form>
         </div>
     </div>
 
+    <script>
+        const categoriasDados = {{ cats_json|safe }};
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            const selTipo = document.getElementById('select-tipo');
+            const selCat = document.getElementById('select-categoria');
+            
+            if (selTipo && selCat) {
+                function atualizarSelect() {
+                    const tipoTransacao = selTipo.value;
+                    let tipoFiltro = 'SAIDA'; // Default para Saída e Registro
+                    
+                    if (tipoTransacao === 'DINHEIRO') tipoFiltro = 'ENTRADA';
+                    else if (tipoTransacao === 'CARTAO') tipoFiltro = 'CARTAO';
+                    
+                    selCat.innerHTML = '';
+                    
+                    const catsFiltradas = categoriasDados.filter(c => c.tipo === tipoFiltro);
+                    catsFiltradas.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.text = c.nome;
+                        selCat.appendChild(opt);
+                    });
+                    
+                    if (catsFiltradas.length === 0) {
+                        const opt = document.createElement('option');
+                        opt.text = "--- Crie uma categoria ---";
+                        selCat.appendChild(opt);
+                    }
+                }
+                
+                selTipo.addEventListener('change', atualizarSelect);
+                setTimeout(atualizarSelect, 100); // Roda ao carregar
+            }
+        });
+        
+        function toggleDesc(el) {
+            const desc = el.querySelector('.item-desc');
+            if(desc) desc.style.display = desc.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
     <script src="{% static 'js/script.js' %}"></script>
 </body>
 </html>

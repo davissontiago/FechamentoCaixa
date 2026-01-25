@@ -11,6 +11,18 @@ class FechamentoCaixa(models.Model):
         status = "Fechado" if self.loja_fechada else "Aberto"
         return f"{self.data} - {status}"
 
+class Categoria(models.Model):
+    TIPO_CAT_CHOICES = [
+        ('ENTRADA', 'Entradas (Dinheiro)'),
+        ('CARTAO', 'Vendas Cartão/Pix'),
+        ('SAIDA', 'Saídas/Despesas'),
+    ]
+    nome = models.CharField(max_length=50)
+    tipo = models.CharField(max_length=10, choices=TIPO_CAT_CHOICES)
+
+    def __str__(self):
+        return f"{self.nome}"
+
 class Movimentacao(models.Model):
     TIPO_CHOICES = [
         ('DINHEIRO', 'Entrada Dinheiro'),
@@ -21,7 +33,9 @@ class Movimentacao(models.Model):
     fechamento = models.ForeignKey(FechamentoCaixa, on_delete=models.CASCADE, related_name='movimentacoes')
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
     valor = models.DecimalField(max_digits=10, decimal_places=2)
-    nome = models.CharField(max_length=100)
+    
+    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT) 
+    descricao = models.CharField(max_length=200, blank=True, null=True, verbose_name="Descrição (Opcional)")
 
     def __str__(self):
-        return f"{self.nome} - R$ {self.valor}"
+        return f"{self.categoria.nome} - R$ {self.valor}"

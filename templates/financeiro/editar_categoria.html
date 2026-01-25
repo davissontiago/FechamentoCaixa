@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Categoria</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">Editar Categoria</div>
+    </nav>
+
+    <div class="app-container" style="padding-top: 20px; display: flex; align-items: center; justify-content: center;">
+        
+        <div class="edit-card">
+            <h3 style="text-align: center; margin-bottom: 20px; color: var(--text-main);">
+                <i class="fas fa-tags"></i> Alterar Categoria
+            </h3>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 0.9rem; color: var(--text-muted);">Tipo</label>
+                    {{ form.tipo }}
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="font-size: 0.9rem; color: var(--text-muted);">Nome</label>
+                    {{ form.nome }}
+                </div>
+
+                <button type="submit" class="btn-primary">Salvar Alterações</button>
+                <a href="{% url 'gerenciar_categorias' %}" class="btn-cancel">Cancelar</a>
+            </form>
+        </div>
+
+    </div>
+</body>
+</html>

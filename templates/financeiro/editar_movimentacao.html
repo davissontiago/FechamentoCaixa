@@ -1,36 +1,102 @@
 <!DOCTYPE html>
-{% load pwa %}
 {% load static %}
 <html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Editar Lançamento</title>
-    <link rel="shortcut icon" href="{% static 'images/icon.png' %}" type="image/png">
-    {% progressive_web_app_meta %}
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Movimentação</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-  </head>
-  <body>
-    <div class="edit-card">
-      <h2 style="margin-top: 0; margin-bottom: 20px;">Editar Lançamento</h2>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">Editar Transação</div>
+    </nav>
 
-      <form method="post">
-        {% csrf_token %}
+    <div class="app-container" style="padding-top: 20px; display: flex; align-items: center; justify-content: center;">
+        
+        <div class="edit-card">
+            <h3 style="text-align: center; margin-bottom: 20px; color: var(--text-main);">
+                <i class="fas fa-pen"></i> Alterar Lançamento
+            </h3>
 
-        <label style="font-size: 0.9rem; font-weight: 600;">Tipo</label>
-        {{ form.tipo }}
+            <form method="post">
+                {% csrf_token %}
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 0.9rem; color: var(--text-muted);">Tipo</label>
+                    {{ form.tipo }}
+                </div>
 
-        <label style="font-size: 0.9rem; font-weight: 600;">Nome</label>
-        {{ form.nome }}
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 0.9rem; color: var(--text-muted);">Categoria</label>
+                    {{ form.categoria }}
+                </div>
 
-        <label style="font-size: 0.9rem; font-weight: 600;">Valor</label>
-        {{ form.valor }}
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 0.9rem; color: var(--text-muted);">Valor (R$)</label>
+                    {{ form.valor }}
+                </div>
 
-        <button type="submit" class="btn-primary">Salvar Alterações</button>
-      </form>
+                <div style="margin-bottom: 20px;">
+                    <label style="font-size: 0.9rem; color: var(--text-muted);">Descrição (Opcional)</label>
+                    {{ form.descricao }}
+                </div>
 
-      <a href="javascript:history.back()" class="btn-cancel">Cancelar</a>
+                <button type="submit" class="btn-primary">Salvar Alterações</button>
+                <a href="javascript:history.back()" class="btn-cancel">Cancelar</a>
+            </form>
+        </div>
+
     </div>
-  </body>
+
+    <script>
+        const categoriasDados = {{ cats_json|safe }};
+        const categoriaAtualId = "{{ form.categoria.value|default_if_none:'' }}"; // ID da categoria salva
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const selTipo = document.getElementById('select-tipo');
+            const selCat = document.getElementById('select-categoria');
+            
+            // === 1. Lógica de Filtro de Categoria ===
+            if (selTipo && selCat) {
+                function atualizarSelect(manterSelecionado = false) {
+                    const tipoTransacao = selTipo.value;
+                    let tipoFiltro = 'SAIDA'; 
+                    
+                    if (tipoTransacao === 'DINHEIRO') tipoFiltro = 'ENTRADA';
+                    else if (tipoTransacao === 'CARTAO') tipoFiltro = 'CARTAO';
+                    
+                    // Limpa opções atuais
+                    selCat.innerHTML = '';
+                    
+                    // Filtra
+                    const catsFiltradas = categoriasDados.filter(c => c.tipo === tipoFiltro);
+                    
+                    catsFiltradas.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.text = c.nome;
+                        selCat.appendChild(opt);
+                    });
+
+                    // Tenta manter a categoria original selecionada se ela pertencer ao tipo correto
+                    if (manterSelecionado && categoriaAtualId) {
+                        selCat.value = categoriaAtualId;
+                        // Se a categoria atual não existir na nova lista (ex: mudou tipo), seleciona a primeira
+                        if (!selCat.value && catsFiltradas.length > 0) selCat.value = catsFiltradas[0].id;
+                    }
+                }
+                
+                selTipo.addEventListener('change', () => atualizarSelect(false));
+                
+                // Roda ao carregar, forçando manter a categoria que já estava salva
+                atualizarSelect(true); 
+            }
+        });
+    </script>
+
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
 </html>

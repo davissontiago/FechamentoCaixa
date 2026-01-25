@@ -175,7 +175,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const formulaElem = document.getElementById('txt-formula');
             if(formulaElem) formulaElem.innerText = txtFormula;
 
-            // Reconstrói Lista
+            // === RECONSTRÓI LISTA (CORRIGIDO) ===
             const listaDiv = document.getElementById('lista-movimentacoes');
             listaDiv.innerHTML = ''; 
             
@@ -189,7 +189,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 let subtexto = 'Saída/Sangria';
                 let sinal = '-';
 
-                // Verificações de Tipo
+                // Configuração dos Tipos (Ícones e Cores)
                 if (mov.tipo === 'CARTAO') { 
                     classeCss = 'tipo-cartao'; 
                     icone = '<i class="fas fa-credit-card"></i>'; 
@@ -205,14 +205,26 @@ document.addEventListener("DOMContentLoaded", function() {
                 else if (mov.tipo === 'REGISTRO') { 
                     classeCss = 'tipo-registro'; 
                     icone = '<i class="fas fa-file-alt"></i>'; 
-                    subtexto = 'Apenas Registro'; 
-                    sinal = '-';
+                    subtexto = 'Registro'; 
+                    sinal = '-'; 
                 }
 
+                // HTML da Descrição (Oculta por padrão)
+                let descHtml = '';
+                if (mov.descricao) {
+                    descHtml = `<div class="item-desc" style="display:none; font-size: 0.85rem; color: #6b7280; margin-top: 4px; font-style: italic;">
+                                    <i class="fas fa-quote-left" style="font-size: 0.7em;"></i> ${mov.descricao}
+                                </div>`;
+                }
+
+                // Montagem do Item
                 const htmlItem = `
-                    <div class="line-item ${classeCss}">
+                    <div class="line-item ${classeCss}" onclick="toggleDesc(this)">
                         <div class="icon-box">${icone}</div>
-                        <div class="info-box"><div class="item-name">${mov.nome}</div><div class="item-sub">${subtexto}</div></div>
+                        <div class="info-box">
+                            <div class="item-name">${mov.categoria}</div> <div class="item-sub">${subtexto}</div>
+                            ${descHtml}
+                        </div>
                         <div class="valor">${sinal} R$ ${mov.valor.toFixed(2)}</div>
                         <a href="${mov.url_editar}" class="btn-action"><i class="fas fa-pen"></i></a>
                         <a href="${mov.url_deletar}" class="btn-action btn-delete"><i class="fas fa-trash"></i></a>

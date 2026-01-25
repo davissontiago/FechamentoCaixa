@@ -1,0 +1,4 @@
+.env
+db.sqlite3
+backup_financeiro_25012026.json
+__pycache__/

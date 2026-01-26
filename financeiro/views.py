@@ -6,7 +6,7 @@ from django.utils.formats import date_format
 from django.db.models import Sum
 from datetime import timedelta, datetime
 from .models import FechamentoCaixa, Movimentacao, Categoria
-from .forms import MovimentacaoRapidaForm, FechamentoSaldoForm, CategoriaForm
+from .forms import MovimentacaoRapidaForm, FechamentoSaldoForm, CategoriaForm, FiltroResumoForm
 
 # === FUNÇÕES AUXILIARES ===
 def obter_dia_anterior(data):
@@ -39,7 +39,7 @@ def gerenciar_categorias(request):
     else:
         form = CategoriaForm()
     
-    categorias = Categoria.objects.all().order_by('tipo', 'nome')
+    categorias = Categoria.objects.all().order_by('nome')
     return render(request, 'financeiro/categorias.html', {'form': form, 'categorias': categorias})
 
 @login_required
@@ -117,7 +117,7 @@ def diario_caixa(request, data_iso=None):
     total_geral = vendas_cartao + miudos
 
     # API de Categorias para o JS
-    categorias_json = list(Categoria.objects.values('id', 'nome', 'tipo'))
+    categorias_json = list(Categoria.objects.values('id', 'nome', 'tipo').order_by('nome'))
 
     return render(request, 'financeiro/caderno.html', {
         'fechamento': fechamento,
@@ -182,25 +182,74 @@ def api_dados_caixa(request, data_iso):
 
 @login_required
 def resumo_financeiro(request):
+    # 1. Definição das Datas (Padrão: Mês Atual)
     hoje = timezone.now().date()
-    mes_atual = hoje.month
-    ano_atual = hoje.year
-    fechamentos = FechamentoCaixa.objects.filter(data__month=mes_atual, data__year=ano_atual).order_by('data')
-    movs = Movimentacao.objects.filter(fechamento__data__month=mes_atual, fechamento__data__year=ano_atual)
+    inicio_mes = hoje.replace(day=1)
     
-    total_cartao = movs.filter(tipo='CARTAO').aggregate(Sum('valor'))['valor__sum'] or 0
-    total_saidas = movs.filter(tipo='SAIDA').aggregate(Sum('valor'))['valor__sum'] or 0
+    data_inicio = request.GET.get('data_inicio', inicio_mes.strftime('%Y-%m-%d'))
+    data_fim = request.GET.get('data_fim', hoje.strftime('%Y-%m-%d'))
     
-    labels = [f.data.strftime('%d/%m') for f in fechamentos]
-    data = [float(f.saldo_final_fisico) for f in fechamentos]
-    
+    # Validação do Filtro
+    form = FiltroResumoForm(initial={'data_inicio': data_inicio, 'data_fim': data_fim})
+    if request.GET:
+        form = FiltroResumoForm(request.GET)
+        if form.is_valid():
+            data_inicio = form.cleaned_data['data_inicio']
+            data_fim = form.cleaned_data['data_fim']
+
+    # 2. Busca Dados no Banco
+    # Buscamos os dias fechados nesse período
+    fechamentos = FechamentoCaixa.objects.filter(data__range=[data_inicio, data_fim])
+    # Buscamos as movimentações dentro desses dias
+    movimentacoes = Movimentacao.objects.filter(fechamento__data__range=[data_inicio, data_fim])
+
+    # 3. Processamento das Vendas em Cartão (Agrupado por Categoria)
+    # Filtra só cartão, agrupa pelo nome da categoria e soma
+    cats_cartao = movimentacoes.filter(tipo='CARTAO').values('categoria__nome').annotate(total=Sum('valor')).order_by('-total')
+    total_cartao = sum(item['total'] for item in cats_cartao)
+
+    # 4. Processamento das Saídas (Agrupado por Categoria)
+    cats_saida = movimentacoes.filter(tipo__in=['SAIDA', 'REGISTRO']).values('categoria__nome').annotate(total=Sum('valor')).order_by('-total')
+    total_saida = sum(item['total'] for item in cats_saida)
+
+    # 5. Processamento das Entradas/Suprimentos (Agrupado por Categoria)
+    cats_entrada = movimentacoes.filter(tipo='DINHEIRO').values('categoria__nome').annotate(total=Sum('valor')).order_by('-total')
+    total_entrada = sum(item['total'] for item in cats_entrada)
+
+    # 6. Cálculo da Venda em Dinheiro (Matemático: Sobra + Saidas - Inicio - Entradas)
+    # Precisamos calcular dia a dia pois depende do saldo físico de cada dia
+    total_dinheiro_calc = 0
+    for dia in fechamentos:
+        movs_dia = dia.movimentacoes.all()
+        suprimentos = sum(m.valor for m in movs_dia if m.tipo == 'DINHEIRO')
+        retiradas = sum(m.valor for m in movs_dia if m.tipo == 'SAIDA')
+        
+        # Fórmula do Dinheiro
+        venda_dia = (retiradas + dia.saldo_final_fisico) - (dia.saldo_inicial + suprimentos)
+        if venda_dia < 0: venda_dia = 0 # Evita valores negativos se houve erro de contagem
+        total_dinheiro_calc += venda_dia
+
+    # Total Geral de Vendas (Cartão + Dinheiro Calculado)
+    receita_total = total_cartao + total_dinheiro_calc
+
+    # Resultado Líquido (Receita - Saídas)
+    # Nota: Não subtraímos "REGISTRO" do líquido pois ele é neutro, mas aqui estamos mostrando gastos.
+    # Se quiser subtrair só o que saiu do caixa, filtre 'cats_saida' apenas por 'SAIDA'.
+    saidas_reais = movimentacoes.filter(tipo='SAIDA').aggregate(Sum('valor'))['valor__sum'] or 0
+    lucro_operacional = receita_total - saidas_reais
+
     return render(request, 'financeiro/resumo.html', {
-        'mes_ano': hoje.strftime('%B / %Y').capitalize(),
+        'form': form,
+        'cats_cartao': cats_cartao,
         'total_cartao': total_cartao,
-        'total_saidas': total_saidas,
-        'media_saldo': (sum(data) / len(data)) if data else 0,
-        'chart_labels': labels,
-        'chart_data': data
+        'cats_saida': cats_saida,
+        'total_saida': total_saida,
+        'cats_entrada': cats_entrada,
+        'total_entrada': total_entrada,
+        'total_dinheiro': total_dinheiro_calc,
+        'receita_total': receita_total,
+        'lucro_operacional': lucro_operacional,
+        'dias_contados': fechamentos.count()
     })
 
 @login_required
@@ -223,7 +272,7 @@ def editar_movimentacao(request, id):
         form = MovimentacaoRapidaForm(instance=mov)
     
     # Precisamos enviar as categorias para o JavaScript filtrar igual na tela principal
-    categorias_json = list(Categoria.objects.values('id', 'nome', 'tipo'))
+    categorias_json = list(Categoria.objects.values('id', 'nome', 'tipo').order_by('nome'))
 
     return render(request, 'financeiro/editar_movimentacao.html', {
         'form': form, 

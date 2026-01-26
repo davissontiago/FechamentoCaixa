@@ -121,46 +121,8 @@
 
     <script>
         const categoriasDados = {{ cats_json|safe }};
-        
-        document.addEventListener("DOMContentLoaded", function() {
-            const selTipo = document.getElementById('select-tipo');
-            const selCat = document.getElementById('select-categoria');
-            
-            if (selTipo && selCat) {
-                function atualizarSelect() {
-                    const tipoTransacao = selTipo.value;
-                    let tipoFiltro = 'SAIDA'; // Default para Saída e Registro
-                    
-                    if (tipoTransacao === 'DINHEIRO') tipoFiltro = 'ENTRADA';
-                    else if (tipoTransacao === 'CARTAO') tipoFiltro = 'CARTAO';
-                    
-                    selCat.innerHTML = '';
-                    
-                    const catsFiltradas = categoriasDados.filter(c => c.tipo === tipoFiltro);
-                    catsFiltradas.forEach(c => {
-                        const opt = document.createElement('option');
-                        opt.value = c.id;
-                        opt.text = c.nome;
-                        selCat.appendChild(opt);
-                    });
-                    
-                    if (catsFiltradas.length === 0) {
-                        const opt = document.createElement('option');
-                        opt.text = "--- Crie uma categoria ---";
-                        selCat.appendChild(opt);
-                    }
-                }
-                
-                selTipo.addEventListener('change', atualizarSelect);
-                setTimeout(atualizarSelect, 100); // Roda ao carregar
-            }
-        });
-        
-        function toggleDesc(el) {
-            const desc = el.querySelector('.item-desc');
-            if(desc) desc.style.display = desc.style.display === 'none' ? 'block' : 'none';
-        }
     </script>
+
     <script src="{% static 'js/script.js' %}"></script>
 </body>
 </html>

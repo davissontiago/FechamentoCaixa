@@ -37,12 +37,22 @@ class MovimentacaoRapidaForm(forms.ModelForm):
                 'inputmode': 'numeric', 
                 'placeholder': '0,00'
             }),
-            'descricao': forms.TextInput(attrs={'placeholder': 'Obs (Opcional)'}),
+            'descricao': forms.TextInput(attrs={'placeholder': 'Descrição (Opcional)'}),
             'categoria': forms.Select(attrs={'id': 'select-categoria'}),
             'tipo': forms.Select(attrs={'id': 'select-tipo'}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Ordena as categorias alfabeticamente
+        
+        # 1. Ordena categorias
         self.fields['categoria'].queryset = Categoria.objects.all().order_by('nome')
+        
+        # 2. Define o texto da opção vazia para "--- Tipo ---"
+        # Pegamos as escolhas originais, filtramos para tirar qualquer vazio antigo e adicionamos o nosso
+        escolhas_originais = [x for x in self.fields['tipo'].choices if x[0] != '']
+        self.fields['tipo'].choices = [('', '--- Tipo ---')] + escolhas_originais
+        
+class FiltroResumoForm(forms.Form):
+    data_inicio = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="De")
+    data_fim = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label="Até")

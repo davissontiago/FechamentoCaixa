@@ -23,10 +23,12 @@ def obter_proximo_dia(data):
 def transportar_saldo_anterior(fechamento_atual):
     data_anterior_util = obter_dia_anterior(fechamento_atual.data)
     fechamento_anterior = FechamentoCaixa.objects.filter(data=data_anterior_util).first()
+    
     if fechamento_anterior:
         if fechamento_atual.saldo_inicial != fechamento_anterior.saldo_final:
             fechamento_atual.saldo_inicial = fechamento_anterior.saldo_final
-            fechamento_atual.save()
+            fechamento_atual.save(update_fields=['saldo_inicial'])
+            
     return fechamento_atual
 
 # === VIEWS DE CATEGORIA ===

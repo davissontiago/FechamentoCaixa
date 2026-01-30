@@ -152,20 +152,17 @@ def api_dados_caixa(request, data_iso):
     fechamento, _ = FechamentoCaixa.objects.get_or_create(data=data_atual)
     transportar_saldo_anterior(fechamento)
     
-    movs = fechamento.movimentacoes.all().select_related('categoria')
-    vendas_cartao = sum(m.valor for m in movs if m.tipo == 'CARTAO')
-    suprimentos = sum(m.valor for m in movs if m.tipo == 'DINHEIRO')
-    retiradas = sum(m.valor for m in movs if m.tipo == 'SAIDA')
-    miudos = (retiradas + fechamento.saldo_final) - (fechamento.saldo_inicial + suprimentos)
-    if miudos < 0: miudos = 0
-    total_geral = vendas_cartao + miudos
+    gestor = GestorCaixa(fechamento)
+    resumo = gestor.calcular_resumo()
+    
+    movs = fechamento.movimentacoes.all().select_related('categoria').order_by('id')
 
     lista_movs = []
     for mov in movs.order_by('id'):
         lista_movs.append({
             'id': mov.id,
-            'categoria': mov.categoria.nome, # Nome da Categoria
-            'descricao': mov.descricao,      # Descrição opcional
+            'categoria': mov.categoria.nome if mov.categoria else 'Sem Categoria',
+            'descricao': mov.descricao or '',
             'valor': float(mov.valor),
             'tipo': mov.tipo,
             'url_editar': f"/editar/{mov.id}/",  
@@ -178,8 +175,19 @@ def api_dados_caixa(request, data_iso):
         'data_formatada': data_texto,
         'data_iso': data_iso,
         'nav': {'anterior': dia_anterior_str, 'proximo': proximo_dia_str, 'atual': data_iso},
-        'saldos': {'inicial': float(fechamento.saldo_inicial), 'final': float(fechamento.saldo_final)},
-        'totais': {'cartao': float(vendas_cartao), 'entradas_esp': float(suprimentos), 'dinheiro_miudo': float(miudos), 'retiradas': float(retiradas), 'geral': float(total_geral)},
+        
+        'saldos': {
+            'inicial': float(fechamento.saldo_inicial), 
+            'final': float(fechamento.saldo_final)
+        },
+        
+        'totais': {
+            'cartao': float(resumo['cartao']), 
+            'entradas_esp': float(resumo['suprimentos']), 
+            'dinheiro_miudo': float(resumo['dinheiro']), 
+            'retiradas': float(resumo['saidas']), 
+            'geral': float(resumo['total_geral'])
+        },
         'movimentacoes': lista_movs
     })
 

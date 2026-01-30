@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.formats import date_format
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from datetime import timedelta, datetime
 from .models import FechamentoCaixa, Movimentacao, Categoria
 from .forms import MovimentacaoRapidaForm, FechamentoSaldoForm, CategoriaForm, FiltroResumoForm
@@ -200,27 +200,42 @@ def resumo_financeiro(request):
     # 2. Busca Dados no Banco
     # Buscamos os dias fechados nesse período
     fechamentos = FechamentoCaixa.objects.filter(data__range=[data_inicio, data_fim])
-    # Buscamos as movimentações dentro desses dias
-    movimentacoes = Movimentacao.objects.filter(fechamento__data__range=[data_inicio, data_fim])
+    
+    # Buscamos as movimentações dentro desses dias (já otimizado com select_related)
+    movimentacoes = Movimentacao.objects.select_related('categoria').filter(fechamento__data__range=[data_inicio, data_fim])
 
-    # 3. Processamento das Vendas em Cartão (Agrupado por Categoria)
-    # Filtra só cartão, agrupa pelo nome da categoria e soma
+    # === 3. OTIMIZAÇÃO: CÁLCULOS MATEMÁTICOS NO BANCO ===
+    # O aggregate calcula todos os totais gerais de uma só vez no banco de dados.
+    # Isso é muito mais rápido do que somar listas no Python.
+    totais_gerais = movimentacoes.aggregate(
+        soma_cartao=Sum('valor', filter=Q(tipo='CARTAO')),
+        soma_saida=Sum('valor', filter=Q(tipo__in=['SAIDA', 'REGISTRO'])),
+        soma_entrada=Sum('valor', filter=Q(tipo='DINHEIRO')),
+        soma_saida_real=Sum('valor', filter=Q(tipo='SAIDA')) # Apenas saídas reais para o lucro
+    )
+    
+    # Se o resultado for None (nenhuma venda), usamos 'or 0' para virar zero
+    total_cartao = totais_gerais['soma_cartao'] or 0
+    total_saida = totais_gerais['soma_saida'] or 0
+    total_entrada = totais_gerais['soma_entrada'] or 0
+    saidas_reais = totais_gerais['soma_saida_real'] or 0
+
+    # === 4. PROCESSAMENTO VISUAL (TABELAS) ===
+    # Mantemos essas queries para preencher as tabelinhas detalhadas por categoria
+    # Mas não precisamos mais percorrer elas para somar o total
     cats_cartao = movimentacoes.filter(tipo='CARTAO').values('categoria__nome').annotate(total=Sum('valor')).order_by('-total')
-    total_cartao = sum(item['total'] for item in cats_cartao)
-
-    # 4. Processamento das Saídas (Agrupado por Categoria)
     cats_saida = movimentacoes.filter(tipo__in=['SAIDA', 'REGISTRO']).values('categoria__nome').annotate(total=Sum('valor')).order_by('-total')
-    total_saida = sum(item['total'] for item in cats_saida)
-
-    # 5. Processamento das Entradas/Suprimentos (Agrupado por Categoria)
     cats_entrada = movimentacoes.filter(tipo='DINHEIRO').values('categoria__nome').annotate(total=Sum('valor')).order_by('-total')
-    total_entrada = sum(item['total'] for item in cats_entrada)
 
-    # 6. Cálculo da Venda em Dinheiro (Matemático: Sobra + Saidas - Inicio - Entradas)
-    # Precisamos calcular dia a dia pois depende do saldo físico de cada dia
+    # === 5. CÁLCULO DA VENDA EM DINHEIRO ===
+    # (Lógica Matemática: Sobra + Saidas - Inicio - Entradas)
+    # Este precisa ser dia-a-dia pois depende do saldo físico diário
     total_dinheiro_calc = 0
     for dia in fechamentos:
+        # Aqui usamos o related manager direto do objeto dia
         movs_dia = dia.movimentacoes.all()
+        
+        # Pequena otimização local: somar no Python aqui é ok pois são poucos itens por dia
         suprimentos = sum(m.valor for m in movs_dia if m.tipo == 'DINHEIRO')
         retiradas = sum(m.valor for m in movs_dia if m.tipo == 'SAIDA')
         
@@ -232,10 +247,7 @@ def resumo_financeiro(request):
     # Total Geral de Vendas (Cartão + Dinheiro Calculado)
     receita_total = total_cartao + total_dinheiro_calc
 
-    # Resultado Líquido (Receita - Saídas)
-    # Nota: Não subtraímos "REGISTRO" do líquido pois ele é neutro, mas aqui estamos mostrando gastos.
-    # Se quiser subtrair só o que saiu do caixa, filtre 'cats_saida' apenas por 'SAIDA'.
-    saidas_reais = movimentacoes.filter(tipo='SAIDA').aggregate(Sum('valor'))['valor__sum'] or 0
+    # Resultado Líquido (Receita - Saídas Reais)
     lucro_operacional = receita_total - saidas_reais
 
     return render(request, 'financeiro/resumo.html', {

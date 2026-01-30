@@ -6,6 +6,8 @@ class FechamentoCaixa(models.Model):
     saldo_inicial = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     saldo_final_fisico = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     loja_fechada = models.BooleanField(default=False)
+    cache_total_cartao = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cache_total_saida = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
         status = "Fechado" if self.loja_fechada else "Aberto"
@@ -31,7 +33,10 @@ class Movimentacao(models.Model):
         ('REGISTRO', 'Registro'),
     ]
     fechamento = models.ForeignKey(FechamentoCaixa, on_delete=models.CASCADE, related_name='movimentacoes')
-    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
+    tipo = models.CharField(
+        max_length=10, 
+        choices=TIPO_CHOICES,
+        db_index=True)
     valor = models.DecimalField(max_digits=10, decimal_places=2)
     
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT) 

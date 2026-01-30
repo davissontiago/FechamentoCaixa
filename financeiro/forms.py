@@ -4,14 +4,14 @@ from .models import FechamentoCaixa, Movimentacao, Categoria
 class FechamentoSaldoForm(forms.ModelForm):
     class Meta:
         model = FechamentoCaixa
-        fields = ['saldo_inicial', 'saldo_final_fisico']
+        fields = ['saldo_inicial', 'saldo_final']
         widgets = {
             'saldo_inicial': forms.TextInput(attrs={
                 'readonly': 'readonly', 
                 'class': 'money-mask',
                 'style': 'background-color: #f3f4f6; color: #6b7280; cursor: not-allowed;'
             }),
-            'saldo_final_fisico': forms.TextInput(attrs={
+            'saldo_final': forms.TextInput(attrs={
                 'class': 'money-mask', 
                 'inputmode': 'numeric',
                 'placeholder': '0,00'

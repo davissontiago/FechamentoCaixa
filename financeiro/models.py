@@ -56,7 +56,7 @@ class Movimentacao(models.Model):
     
     valor = models.DecimalField(max_digits=10, decimal_places=2)
     descricao = models.CharField(max_length=200, blank=True, null=True)
-    criado_em = models.DateTimeField(auto_now_add=True)
+    criado_em = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     objects = MovimentacaoQuerySet.as_manager()
 

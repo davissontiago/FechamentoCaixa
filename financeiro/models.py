@@ -1,46 +1,64 @@
 from django.db import models
-from django.utils import timezone
+from django.db.models import Sum, Q
 
-class FechamentoCaixa(models.Model):
-    data = models.DateField(default=timezone.now, unique=True)
-    saldo_inicial = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    saldo_final_fisico = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    loja_fechada = models.BooleanField(default=False)
-    cache_total_cartao = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    cache_total_saida = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+# 1. QUERYSET INTELIGENTE
+class MovimentacaoQuerySet(models.QuerySet):
+    def resumo_rapido(self):
+        """
+        Calcula os totais diretamente no banco de dados.
+        Retorna um dicionário com os valores prontos.
+        """
+        return self.aggregate(
+            total_cartao=Sum('valor', filter=Q(tipo='CARTAO')),
+            total_suprimento=Sum('valor', filter=Q(tipo='DINHEIRO')),
+            total_saida=Sum('valor', filter=Q(tipo='SAIDA'))
+        )
 
-    def __str__(self):
-        status = "Fechado" if self.loja_fechada else "Aberto"
-        return f"{self.data} - {status}"
-
+# 2. MODELO DE CATEGORIA
 class Categoria(models.Model):
-    TIPO_CAT_CHOICES = [
-        ('ENTRADA', 'Entradas (Dinheiro)'),
-        ('CARTAO', 'Vendas Cartão/Pix'),
-        ('SAIDA', 'Saídas/Despesas'),
+    TIPO_CHOICES = [
+        ('ENTRADA', 'Entrada'),
+        ('SAIDA', 'Saída'),
+        ('CARTAO', 'Cartão/Pix'),
     ]
     nome = models.CharField(max_length=50)
-    tipo = models.CharField(max_length=10, choices=TIPO_CAT_CHOICES)
-
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
+    
     def __str__(self):
-        return f"{self.nome}"
+        return self.nome
 
+# 3. MODELO DE FECHAMENTO
+class FechamentoCaixa(models.Model):
+    data = models.DateField(unique=True)
+    saldo_inicial = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    saldo_final = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    cache_total_cartao = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cache_total_saida = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cache_total_suprimento = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    def __str__(self):
+        return f"Caixa {self.data}"
+
+# 4. MODELO DE MOVIMENTACAO
 class Movimentacao(models.Model):
     TIPO_CHOICES = [
         ('DINHEIRO', 'Entrada Dinheiro'),
         ('CARTAO', 'Cartão/Pix'),
-        ('SAIDA', 'Saída do Caixa'),
+        ('SAIDA', 'Saída'),
         ('REGISTRO', 'Registro'),
     ]
+
     fechamento = models.ForeignKey(FechamentoCaixa, on_delete=models.CASCADE, related_name='movimentacoes')
-    tipo = models.CharField(
-        max_length=10, 
-        choices=TIPO_CHOICES,
-        db_index=True)
-    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True)
     
-    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT) 
-    descricao = models.CharField(max_length=200, blank=True, null=True, verbose_name="Descrição (Opcional)")
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='SAIDA', db_index=True)
+    
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    descricao = models.CharField(max_length=200, blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    objects = MovimentacaoQuerySet.as_manager()
 
     def __str__(self):
-        return f"{self.categoria.nome} - R$ {self.valor}"
+        return f"{self.get_tipo_display()} - R$ {self.valor}"

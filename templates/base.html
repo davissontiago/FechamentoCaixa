@@ -5,6 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
     <title>{% block title %}Controle de Caixa{% endblock %}</title>
     
     <link rel="manifest" href="{% static 'manifest.json' %}">
@@ -43,35 +44,13 @@
             </button>
         </div>
         <ul class="sidebar-menu">
-            
-            <li>
-                <a href="{% url 'home' %}">
-                    <i class="fas fa-home"></i> Caixa Diário
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'resumo_financeiro' %}">
-                    <i class="fas fa-chart-line"></i> Relatórios
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'gerenciar_categorias' %}">
-                    <i class="fas fa-tags"></i> Categorias
-                </a>
-            </li>
+            <li><a href="{% url 'home' %}"><i class="fas fa-home"></i> Caixa Diário</a></li>
+            <li><a href="{% url 'resumo_financeiro' %}"><i class="fas fa-chart-line"></i> Relatórios</a></li>
+            <li><a href="{% url 'gerenciar_categorias' %}"><i class="fas fa-tags"></i> Categorias</a></li>
             {% if user.is_staff %}
-            <li>
-                <a href="/admin/">
-                    <i class="fas fa-cog"></i> Administração
-                </a>
-            </li>
+            <li><a href="/admin/"><i class="fas fa-cog"></i> Administração</a></li>
             {% endif %}
-            <li>
-                <a href="{% url 'logout' %}">
-                    <i class="fas fa-sign-out-alt"></i> Sair
-                </a>
-            </li>
-            
+            <li><a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
         </ul>
     </div>
 
@@ -79,11 +58,10 @@
         {% block content %}
         {% endblock %}
     </main>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     
-    <script src="{% static 'js/script.js' %}"></script>
+    <script src="{% static 'js/utils.js' %}"></script>
+    <script src="{% static 'js/layout.js' %}"></script>
+    <script src="{% static 'js/forms.js' %}"></script>
     
     {% block extra_scripts %}{% endblock %}
 </body>

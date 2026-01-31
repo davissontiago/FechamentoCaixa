@@ -3,11 +3,17 @@
 
 {% block title %}Fluxo Diário{% endblock %}
 
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/caderno.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="app-container">
 
     <div class="header-nav">
-        <a href="{% url 'caixa_dia' dia_anterior|date:'Y-m-d' %}" id="btn-anterior" class="nav-btn">
+        <a href="{% url 'caixa_dia' dia_anterior|date:'Y-m-d' %}" 
+           data-dest="{{ dia_anterior|date:'Y-m-d' }}" 
+           id="btn-anterior" class="nav-btn">
             <i class="fas fa-chevron-left"></i>
         </a>
         
@@ -19,7 +25,9 @@
             <input type="date" id="seletor-data" value="{{ data_atual_iso }}">
         </div>
 
-        <a href="{% url 'caixa_dia' proximo_dia|date:'Y-m-d' %}" id="btn-proximo" class="nav-btn">
+        <a href="{% url 'caixa_dia' proximo_dia|date:'Y-m-d' %}" 
+           data-dest="{{ proximo_dia|date:'Y-m-d' }}" 
+           id="btn-proximo" class="nav-btn">
             <i class="fas fa-chevron-right"></i>
         </a>
     </div>
@@ -48,39 +56,37 @@
         <div class="resumo-card">
             <div class="resumo-row">
                 <span>(+) Vendas Cartão/Pix</span>
-                <span class="val-blue">R$ {{ totais.cartao|floatformat:2 }}</span>
+                <span class="val-blue" id="val-cartao">R$ {{ totais.cartao|floatformat:2 }}</span>
             </div>
             <div class="resumo-row">
                 <span>(i) Suprimentos (Reforço)</span>
-                <span class="val-purple">R$ {{ totais.entradas_esp|floatformat:2 }}</span>
+                <span class="val-purple" id="val-entrada-esp">R$ {{ totais.entradas_esp|floatformat:2 }}</span>
             </div>
             <div class="resumo-row">
                 <span>(+) Vendas Dinheiro (Calc)</span>
-                <span class="val-orange">R$ {{ totais.dinheiro_miudo|floatformat:2 }}</span>
+                <span class="val-orange" id="val-dinheiro-calc">R$ {{ totais.dinheiro_miudo|floatformat:2 }}</span>
             </div>
             
-            <div class="resumo-footer">
+            <div class="resumo-footer" id="txt-formula">
                 *Dinheiro = ({{ totais.retiradas|floatformat:2 }} Saídas + {{ fechamento.saldo_final|floatformat:2 }} Sobrou) - ({{ fechamento.saldo_inicial|floatformat:2 }} Início + {{ totais.entradas_esp|floatformat:2 }} Suprimentos)
             </div>
             
             <div class="resumo-total">
                 <span>Receita Total (Vendas)</span>
-                <span>R$ {{ totais.geral|floatformat:2 }}</span>
+                <span id="val-geral">R$ {{ totais.geral|floatformat:2 }}</span>
             </div>
         </div>
 
         <div class="movimentacoes-list" id="lista-movimentacoes">
             {% for mov in movimentacoes %}
-                <a href="{% url 'editar_movimentacao' mov.id %}" class="link-item">
+                <div class="mov-card" onclick="this.classList.toggle('active')">
                     <div class="line-item {% if mov.tipo == 'CARTAO' %}tipo-cartao{% elif mov.tipo == 'DINHEIRO' %}tipo-dinheiro{% elif mov.tipo == 'REGISTRO' %}tipo-registro{% else %}tipo-saida{% endif %}">
-                        
                         <div class="icon-box">
                             {% if mov.tipo == 'CARTAO' %} <i class="fas fa-credit-card"></i>
                             {% elif mov.tipo == 'DINHEIRO' %} <i class="fas fa-coins"></i>
                             {% elif mov.tipo == 'REGISTRO' %} <i class="fas fa-file-alt"></i>
                             {% else %} <i class="fas fa-arrow-down"></i> {% endif %}
                         </div>
-                        
                         <div class="info-box">
                             <div class="item-name">{{ mov.categoria.nome }}</div>
                             <div class="item-sub">
@@ -89,19 +95,27 @@
                                 {% elif mov.tipo == 'REGISTRO' %} Registro
                                 {% else %} Saída/Sangria {% endif %}
                             </div>
-                            {% if mov.descricao %}
-                                <div class="item-desc">
-                                    <i class="fas fa-quote-left"></i> {{ mov.descricao }}
-                                </div>
-                            {% endif %}
                         </div>
-                        
                         <div class="valor">
                             {% if mov.tipo == 'SAIDA' %}-{% elif mov.tipo == 'REGISTRO' %}-{% else %}+{% endif %} 
                             R$ {{ mov.valor|floatformat:2 }}
                         </div>
                     </div>
-                </a>
+
+                    <div class="mov-details" onclick="event.stopPropagation()">
+                        <div class="mov-desc">
+                            {% if mov.descricao %}<i class="fas fa-quote-left"></i> {{ mov.descricao }} <i class="fas fa-quote-right"></i>{% else %}Sem descrição{% endif %}
+                        </div>
+                        <div class="mov-actions">
+                            <a href="{% url 'editar_movimentacao' mov.id %}" class="btn-text-action btn-text-edit">
+                                <i class="fas fa-pen"></i> Editar
+                            </a>
+                            <a href="{% url 'deletar_movimentacao' mov.id %}" class="btn-text-action btn-text-delete" onclick="return confirm('Tem certeza que deseja excluir?')">
+                                <i class="fas fa-trash"></i> Excluir
+                            </a>
+                        </div>
+                    </div>
+                </div>
             {% empty %}
                 <div class="empty-state">
                     <i class="fas fa-basket-shopping"></i>
@@ -111,9 +125,14 @@
         </div>
     </div>
 
-    <a href="{% url 'salvar_movimentacao' data_atual_iso %}" class="fab-btn" title="Adicionar Movimentação">
+    <a href="{% url 'salvar_movimentacao' data_atual_iso %}" class="fab-btn" title="Nova Movimentação">
         <i class="fas fa-plus"></i>
     </a>
 
 </div>
+
+{% block extra_scripts %}
+    <script src="{% static 'js/caderno.js' %}"></script>
+{% endblock %}
+
 {% endblock %}

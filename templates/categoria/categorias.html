@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Categorias{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/categorias.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="app-container">
+    <div class="header-nav" style="justify-content: center;">
+        <span class="navbar-brand" style="color: var(--primary);">
+            <i class="fas fa-tags"></i> Gerenciar Categorias
+        </span>
+    </div>
+
+    <div class="cat-list-container">
+        
+        <div class="cat-list">
+            {% for cat in categorias %}
+                <a href="{% url 'editar_categoria' cat.id %}" class="cat-card-link">
+                    <div class="cat-card">
+                        <div class="cat-icon {% if cat.tipo == 'ENTRADA' %}c-green{% elif cat.tipo == 'SAIDA' %}c-red{% else %}c-blue{% endif %}">
+                            {% if cat.tipo == 'ENTRADA' %} <i class="fas fa-arrow-up"></i>
+                            {% elif cat.tipo == 'SAIDA' %} <i class="fas fa-arrow-down"></i>
+                            {% else %} <i class="fas fa-credit-card"></i> {% endif %}
+                        </div>
+                        
+                        <div class="cat-info">
+                            <span class="cat-name">{{ cat.nome }}</span>
+                            <span class="cat-type">
+                                {% if cat.tipo == 'ENTRADA' %}Entrada (Dinheiro)
+                                {% elif cat.tipo == 'SAIDA' %}Saída
+                                {% else %}Cartão{% endif %}
+                            </span>
+                        </div>
+
+                        <div class="cat-chevron">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </a>
+            {% empty %}
+                <div class="empty-state">
+                    <i class="fas fa-folder-open"></i>
+                    <p>Nenhuma categoria cadastrada.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <a href="{% url 'nova_categoria' %}" class="fab-btn" title="Nova Categoria">
+        <i class="fas fa-plus"></i>
+    </a>
+</div>
+{% endblock %}

@@ -48,9 +48,13 @@ class MovimentacaoForm(forms.ModelForm):
         # 1. Ordena categorias alfabeticamente
         self.fields['categoria'].queryset = Categoria.objects.all().order_by('nome')
         
-        # 2. Adiciona opção padrão "--- Tipo ---"
+        # 2. Adiciona a opção "--- Tipo ---" na lista
         escolhas_originais = [x for x in self.fields['tipo'].choices if x[0] != '']
         self.fields['tipo'].choices = [('', '--- Tipo ---')] + escolhas_originais
+        
+        # 3. IMPORTANTE: Remove o valor padrão (SAIDA) se for um cadastro novo
+        if not self.instance.pk:
+            self.initial['tipo'] = ''
         
 class FiltroResumoForm(forms.Form):
     data_inicio = forms.DateField(

@@ -1,0 +1,157 @@
+/* === FORMULÁRIO RÁPIDO (TOPO) === */
+.add-cat-section {
+    background: #fff;
+    padding: 20px;
+    margin: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.add-cat-section h3 {
+    margin: 0 0 15px 0;
+    font-size: 1rem;
+    color: var(--text-dark);
+}
+
+.form-inline {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.form-group-inline {
+    margin: 0;
+}
+
+.form-group-inline.flex-grow {
+    flex: 1; /* O input de nome ocupa o espaço restante */
+}
+
+/* Ajuste nos inputs que vem do form.css para caberem na linha */
+.form-inline select, 
+.form-inline input {
+    margin: 0 !important;
+    height: 45px; /* Altura fixa para alinhar botão */
+}
+
+.btn-add {
+    height: 45px;
+    width: 45px;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: background 0.2s;
+}
+
+.btn-add:hover {
+    background-color: var(--primary-hover);
+}
+
+/* === LISTA DE CATEGORIAS === */
+.cat-list-container {
+    padding: 0 20px 100px 20px;
+}
+
+.list-title {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.cat-card {
+    background: #fff;
+    border-bottom: 1px solid #f3f4f6;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.cat-card:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+.cat-card:last-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; border-bottom: none; }
+
+.cat-card:hover {
+    background-color: #f9fafb;
+}
+
+/* Ícone Colorido */
+.cat-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 0.9rem;
+}
+
+.c-green { background: #d1fae5; color: var(--success); }
+.c-red { background: #fee2e2; color: var(--danger); }
+.c-blue { background: #dbeafe; color: var(--primary); }
+
+/* Texto */
+.cat-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.cat-name {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.cat-type {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Ações (Editar/Excluir) */
+.cat-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.btn-icon.edit {
+    color: #3b82f6;
+    background: #eff6ff;
+}
+
+.btn-icon.delete {
+    color: #ef4444;
+    background: #fef2f2;
+}
+
+.btn-icon:hover {
+    opacity: 0.8;
+}
+
+/* Responsivo para celular muito pequeno */
+@media (max-width: 360px) {
+    .form-inline {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .btn-add { width: 100%; }
+}

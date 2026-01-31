@@ -109,7 +109,6 @@ def diario_caixa(request, data_iso=None):
 
 @login_required
 def salvar_movimentacao(request, data_iso):
-    """Cria uma nova movimentação."""
     try:
         data_atual = datetime.strptime(data_iso, '%Y-%m-%d').date()
     except ValueError:
@@ -123,23 +122,23 @@ def salvar_movimentacao(request, data_iso):
             nova_mov = form.save(commit=False)
             nova_mov.fechamento = fechamento
             nova_mov.save()
-            
-            # Atualiza Cache
             GestorCaixa(fechamento).atualizar_cache_do_banco()
             return redirect('caixa_dia', data_iso=data_iso)
     else:
         form = MovimentacaoForm()
 
+    categorias_json = list(Categoria.objects.values('id', 'nome', 'tipo').order_by('nome'))
+
     return render(request, 'financeiro/movimentacoes/form.html', {
         'form': form,
         'titulo': 'Nova Movimentação',
         'data_iso': data_iso,
-        'mov': None
+        'mov': None,
+        'cats_json': categorias_json # <--- Importante!
     })
 
 @login_required
 def editar_movimentacao(request, id):
-    """Edita uma movimentação existente."""
     mov = get_object_or_404(Movimentacao, id=id)
     data_iso = mov.fechamento.data.strftime('%Y-%m-%d')
     
@@ -147,18 +146,19 @@ def editar_movimentacao(request, id):
         form = MovimentacaoForm(request.POST, instance=mov)
         if form.is_valid():
             form.save()
-            
-            # Atualiza Cache
             GestorCaixa(mov.fechamento).atualizar_cache_do_banco()
             return redirect('caixa_dia', data_iso=data_iso)
     else:
         form = MovimentacaoForm(instance=mov)
 
+    categorias_json = list(Categoria.objects.values('id', 'nome', 'tipo').order_by('nome'))
+
     return render(request, 'financeiro/movimentacoes/form.html', {
         'form': form,
         'titulo': f'Editar {mov.categoria.nome if mov.categoria else "Item"}',
         'data_iso': data_iso,
-        'mov': mov
+        'mov': mov,
+        'cats_json': categorias_json # <--- Importante!
     })
 
 @login_required
@@ -320,6 +320,19 @@ def resumo_financeiro(request):
 
 @login_required
 def gerenciar_categorias(request):
+    """
+    Lista todas as categorias cadastradas.
+    URL: /categorias/
+    """
+    categorias = Categoria.objects.all().order_by('nome')
+    return render(request, 'categorias/categorias.html', {'categorias': categorias})
+
+@login_required
+def salvar_categoria(request):
+    """
+    Cria uma NOVA categoria.
+    URL: /categorias/nova/
+    """
     if request.method == 'POST':
         form = CategoriaForm(request.POST)
         if form.is_valid():
@@ -328,12 +341,20 @@ def gerenciar_categorias(request):
     else:
         form = CategoriaForm()
     
-    categorias = Categoria.objects.all().order_by('nome')
-    return render(request, 'financeiro/categorias.html', {'form': form, 'categorias': categorias})
+    # Reutiliza o template de form genérico
+    return render(request, 'categorias/form.html', {
+        'form': form,
+        'titulo': 'Nova Categoria'
+    })
 
 @login_required
 def editar_categoria(request, id):
+    """
+    Edita uma categoria EXISTENTE.
+    URL: /categorias/editar/<id>/
+    """
     categoria = get_object_or_404(Categoria, id=id)
+    
     if request.method == 'POST':
         form = CategoriaForm(request.POST, instance=categoria)
         if form.is_valid():
@@ -341,14 +362,24 @@ def editar_categoria(request, id):
             return redirect('gerenciar_categorias')
     else:
         form = CategoriaForm(instance=categoria)
-    return render(request, 'financeiro/editar_categoria.html', {'form': form})
+    
+    # Reutiliza o mesmo template, passando o objeto 'categoria' para habilitar o botão excluir se necessário
+    return render(request, 'categorias/form.html', {
+        'form': form,
+        'titulo': 'Editar Categoria',
+        'categoria': categoria
+    })
 
 @login_required
 def deletar_categoria(request, id):
+    """
+    Remove uma categoria.
+    URL: /categorias/deletar/<id>/
+    """
     cat = get_object_or_404(Categoria, id=id)
     try:
         cat.delete()
     except:
-        # Pode estar protegida se tiver movimentações vinculadas
+        # Em caso de erro (ex: categoria protegida por Foreign Key), apenas ignora ou poderia exibir msg
         pass 
     return redirect('gerenciar_categorias')

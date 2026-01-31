@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Categoria{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="card-form-page">
+    <div class="header-page">
+        <h2>Editar Categoria</h2>
+        <a href="{% url 'gerenciar_categorias' %}" class="btn-close-page">
+            <i class="fas fa-times"></i>
+        </a>
+    </div>
+
+    <form method="post" class="form-padrao">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>Tipo de Transação</label>
+            {{ form.tipo }}
+        </div>
+
+        <div class="form-group">
+            <label>Nome da Categoria</label>
+            {{ form.nome }}
+        </div>
+
+        {% if form.errors %}
+            <div class="error-msg">{{ form.errors }}</div>
+        {% endif %}
+
+        <div class="actions">
+            <button type="submit" class="btn-save full-width">
+                <i class="fas fa-check"></i> Salvar Alterações
+            </button>
+            
+            <a href="{% url 'gerenciar_categorias' %}" class="btn-cancel full-width" style="text-align: center; margin-top: 10px; display: block; background: #f3f4f6; color: #6b7280;">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

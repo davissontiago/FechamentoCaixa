@@ -1,8 +1,6 @@
 .env
 db.sqlite3
-backup_financeiro_antigo.json
-backup_financeiro_novo.json
-backup_30012026.json
+backups
 __pycache__/
 importar_backup.py
 verificar_dados.py

@@ -1,0 +1,58 @@
+.card-form-page {
+    background: #fff; padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    max-width: 600px; margin: 30px auto;
+    width: 90%;
+}
+
+.header-page {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 25px; border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 15px;
+}
+.header-page h2 { margin: 0; font-size: 1.5rem; color: var(--text-dark); }
+
+.btn-close-page {
+    color: var(--text-muted); font-size: 1.5rem;
+    text-decoration: none; transition: color 0.2s; padding: 5px;
+}
+.btn-close-page:hover { color: var(--danger); }
+
+.form-group { margin-bottom: 20px; }
+.form-group label {
+    display: block; margin-bottom: 8px;
+    color: var(--text-dark); font-weight: 500; font-size: 0.95rem;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    padding: 12px 15px; background-color: #fff;
+    border: 1px solid #e5e7eb; border-radius: 10px;
+    width: 100%; box-sizing: border-box;
+}
+
+.error-msg {
+    color: var(--danger); font-size: 0.85rem;
+    margin-top: 6px; display: block;
+}
+
+.actions {
+    margin-top: 30px; display: flex;
+    flex-direction: column; gap: 15px;
+}
+
+.full-width {
+    width: 100%; display: flex; justify-content: center; align-items: center;
+    padding: 14px; border-radius: 10px;
+    font-weight: 600; font-size: 1rem;
+    cursor: pointer; border: none; text-decoration: none;
+    transition: transform 0.1s; box-sizing: border-box;
+}
+.full-width:active { transform: scale(0.98); }
+.full-width i { margin-right: 8px; }
+
+.btn-save { background-color: var(--success); color: white; }
+.btn-save:hover { background-color: #059669; }
+
+.btn-delete { background-color: #fee2e2; color: var(--danger); }
+.btn-delete:hover { background-color: #fecaca; }

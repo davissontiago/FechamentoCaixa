@@ -1,6 +1,7 @@
 from datetime import timedelta, datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.formats import date_format
@@ -369,3 +370,12 @@ def deletar_categoria(request, id):
         # Em caso de erro (ex: categoria protegida por Foreign Key), apenas ignora ou poderia exibir msg
         pass 
     return redirect('gerenciar_categorias')
+
+# === AUTENTICAÇÃO ==
+
+def fazer_logout(request):
+    """
+    Função simples para deslogar via GET (link) e redirecionar para login.
+    """
+    logout(request)
+    return redirect('login')

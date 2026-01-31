@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="card-form-page">
+    <div class="header-page">
+        <h2>{{ titulo }}</h2>
+        <a href="{% url 'caixa_dia' data_iso %}" class="btn-close-page">
+            <i class="fas fa-times"></i>
+        </a>
+    </div>
+
+    <form method="post" class="form-padrao">
+        {% csrf_token %}
+        
+        {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+                <div class="error-msg">{{ field.errors }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="actions">
+            <button type="submit" class="btn-save full-width">
+                <i class="fas fa-check"></i> Salvar
+            </button>
+            
+            {% if mov %}
+            <a href="{% url 'deletar_movimentacao' mov.id %}" class="btn-delete full-width" onclick="return confirm('Tem certeza que deseja excluir?')">
+                <i class="fas fa-trash"></i> Excluir
+            </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}

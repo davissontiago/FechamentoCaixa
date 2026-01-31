@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fluxo Diário{% endblock %}
+
+{% block content %}
+<div class="app-container">
+
+    <div class="header-nav">
+        <a href="{% url 'caixa_dia' dia_anterior|date:'Y-m-d' %}" id="btn-anterior" class="nav-btn">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        
+        <div class="date-selector-wrapper">
+            <div class="date-display" id="display-data">
+                {{ data_atual|date:'l, d \d\e F' }} 
+                <i class="fas fa-caret-down"></i>
+            </div>
+            <input type="date" id="seletor-data" value="{{ data_atual_iso }}">
+        </div>
+
+        <a href="{% url 'caixa_dia' proximo_dia|date:'Y-m-d' %}" id="btn-proximo" class="nav-btn">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+
+    <form method="post" id="form-saldos">
+        {% csrf_token %}
+        <input type="hidden" name="btn_saldos" value="1" />
+        
+        <div class="saldo-block">
+            <div class="saldo-label"><i class="fas fa-coins"></i> Iniciou o dia com:</div>
+            <div class="saldo-input">
+                {{ form_saldo.saldo_inicial }}
+            </div>
+        </div>
+        
+        <div class="saldo-block final">
+            <div class="saldo-label green"><i class="fas fa-money-bill-wave"></i> Sobrou no final:</div>
+            <div class="saldo-input">
+                {{ form_saldo.saldo_final }}
+            </div>
+        </div>
+        <button type="submit" class="hidden-submit" id="btn-save-saldo"></button>
+    </form>
+
+    <div class="content-area">
+        <div class="resumo-card">
+            <div class="resumo-row">
+                <span>(+) Vendas Cartão/Pix</span>
+                <span class="val-blue">R$ {{ totais.cartao|floatformat:2 }}</span>
+            </div>
+            <div class="resumo-row">
+                <span>(i) Suprimentos (Reforço)</span>
+                <span class="val-purple">R$ {{ totais.entradas_esp|floatformat:2 }}</span>
+            </div>
+            <div class="resumo-row">
+                <span>(+) Vendas Dinheiro (Calc)</span>
+                <span class="val-orange">R$ {{ totais.dinheiro_miudo|floatformat:2 }}</span>
+            </div>
+            
+            <div class="resumo-footer">
+                *Dinheiro = ({{ totais.retiradas|floatformat:2 }} Saídas + {{ fechamento.saldo_final|floatformat:2 }} Sobrou) - ({{ fechamento.saldo_inicial|floatformat:2 }} Início + {{ totais.entradas_esp|floatformat:2 }} Suprimentos)
+            </div>
+            
+            <div class="resumo-total">
+                <span>Receita Total (Vendas)</span>
+                <span>R$ {{ totais.geral|floatformat:2 }}</span>
+            </div>
+        </div>
+
+        <div class="movimentacoes-list" id="lista-movimentacoes">
+            {% for mov in movimentacoes %}
+                <a href="{% url 'editar_movimentacao' mov.id %}" class="link-item">
+                    <div class="line-item {% if mov.tipo == 'CARTAO' %}tipo-cartao{% elif mov.tipo == 'DINHEIRO' %}tipo-dinheiro{% elif mov.tipo == 'REGISTRO' %}tipo-registro{% else %}tipo-saida{% endif %}">
+                        
+                        <div class="icon-box">
+                            {% if mov.tipo == 'CARTAO' %} <i class="fas fa-credit-card"></i>
+                            {% elif mov.tipo == 'DINHEIRO' %} <i class="fas fa-coins"></i>
+                            {% elif mov.tipo == 'REGISTRO' %} <i class="fas fa-file-alt"></i>
+                            {% else %} <i class="fas fa-arrow-down"></i> {% endif %}
+                        </div>
+                        
+                        <div class="info-box">
+                            <div class="item-name">{{ mov.categoria.nome }}</div>
+                            <div class="item-sub">
+                                {% if mov.tipo == 'CARTAO' %} Cartão/Pix
+                                {% elif mov.tipo == 'DINHEIRO' %} Suprimento
+                                {% elif mov.tipo == 'REGISTRO' %} Registro
+                                {% else %} Saída/Sangria {% endif %}
+                            </div>
+                            {% if mov.descricao %}
+                                <div class="item-desc">
+                                    <i class="fas fa-quote-left"></i> {{ mov.descricao }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="valor">
+                            {% if mov.tipo == 'SAIDA' %}-{% elif mov.tipo == 'REGISTRO' %}-{% else %}+{% endif %} 
+                            R$ {{ mov.valor|floatformat:2 }}
+                        </div>
+                    </div>
+                </a>
+            {% empty %}
+                <div class="empty-state">
+                    <i class="fas fa-basket-shopping"></i>
+                    <p>Nenhuma movimentação hoje.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <a href="{% url 'salvar_movimentacao' data_atual_iso %}" class="fab-btn" title="Adicionar Movimentação">
+        <i class="fas fa-plus"></i>
+    </a>
+
+</div>
+{% endblock %}

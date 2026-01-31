@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Controle de Caixa{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-header">
+            <i class="fas fa-wallet fa-3x" style="color: var(--primary);"></i>
+            <h2>Bem-vindo</h2>
+            <p style="color: var(--text-muted);">Faça login para continuar</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <div class="alert-error">
+                    <i class="fas fa-exclamation-circle"></i> Usuário ou senha inválidos.
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="id_username">Usuário</label>
+                {{ form.username }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_password">Senha</label>
+                {{ form.password }}
+            </div>
+
+            <button type="submit" class="btn-primary">
+                Entrar <i class="fas fa-arrow-right" style="margin-left: 5px;"></i>
+            </button>
+            
+            <input type="hidden" name="next" value="{{ next }}">
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Estilos específicos para centralizar o login na tela */
+    .login-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 140px); /* Desconta header/footer */
+        padding: 20px;
+    }
+    
+    .login-header {
+        margin-bottom: 30px;
+    }
+    
+    .alert-error {
+        background-color: #fee2e2;
+        color: #ef4444;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+        border: 1px solid #fecaca;
+    }
+
+    /* Sobrescreve estilo de input para ficar full-width no card */
+    .login-card input {
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}

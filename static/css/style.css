@@ -479,3 +479,129 @@ input:checked + .slider:before { transform: translateX(20px); }
     text-decoration: none;
     font-size: 0.9rem;
 }
+
+/* === ESTILOS DO CADERNO (Refatorado) === */
+
+/* Navegação de Data */
+.date-selector-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.date-selector-wrapper input[type="date"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.date-display {
+    text-transform: capitalize;
+    font-weight: 600;
+}
+
+.date-display i {
+    font-size: 0.8em;
+    opacity: 0.5;
+    margin-left: 5px;
+}
+
+/* Link da Lista (Remove sublinhado padrão) */
+.link-item {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.link-item:hover {
+    background-color: #f9fafb;
+}
+
+/* Descrição do Item */
+.item-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.item-desc i {
+    font-size: 0.7em;
+}
+
+/* Estado Vazio */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #9ca3af;
+}
+
+.empty-state i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* Botão Oculto */
+.hidden-submit {
+    display: none;
+}
+
+/* Cores de Resumo */
+.val-blue { color: #60a5fa; }
+.val-purple { color: #a78bfa; }
+.val-orange { color: #fbbf24; }
+
+/* === BOTÃO FLUTUANTE (FAB) === */
+.fab-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 60px;
+    height: 60px;
+    background-color: var(--success); /* Usa a variável global do seu CSS */
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    text-decoration: none;
+    z-index: 1000;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.fab-btn:hover {
+    background-color: #059669; /* Tom mais escuro de verde */
+    transform: scale(1.05);
+    color: white;
+}
+
+.fab-btn:active {
+    transform: scale(0.95);
+}
+
+/* Ajuste do container para o botão não cobrir conteúdo */
+.app-container {
+    padding-bottom: 90px;
+}
+
+/* Campo Readonly (Saldo Inicial) */
+.input-readonly {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
+    border-color: #e5e7eb;
+}
+
+/* Garante que o focus não mude a cor se for readonly */
+.input-readonly:focus {
+    background-color: #f3f4f6;
+    border-color: #e5e7eb;
+    outline: none;
+}

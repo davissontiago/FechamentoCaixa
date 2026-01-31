@@ -17,6 +17,22 @@ document.addEventListener("DOMContentLoaded", function() {
             input.addEventListener('input', function() { aplicarMascaraMoeda(this); });
             input.addEventListener('focus', function() { this.select(); });
         }
+
+        // Auto-save específico para o campo de saldo final
+        if (input.id === 'id_saldo_final') {
+             // CORREÇÃO: Removemos o bloqueio do 'keypress' (Enter) para o botão "Ir" funcionar.
+             
+             // Mantemos apenas o auto-save ao sair do campo (clicar fora)
+             input.addEventListener('blur', function () {
+                setTimeout(() => {
+                    const form = this.closest('form');
+                    // Só dispara o auto-save se o formulário JÁ NÃO estiver sendo enviado (pelo Enter)
+                    if (form && !form.dataset.isSubmitting) {
+                        dispararSubmitLimpo(form);
+                    }
+                }, 200);
+            });
+        }
     });
 
     // 2. INTERCEPTAÇÃO DE SUBMIT (Limpa R$)
@@ -24,19 +40,30 @@ document.addEventListener("DOMContentLoaded", function() {
         if (form.querySelector('.money-mask')) {
             form.addEventListener('submit', function(e) {
                 e.preventDefault(); 
-                const btn = this.querySelector('button[type="submit"]');
-                if (btn) {
-                    if (btn.disabled) return;
-                    btn.disabled = true;
-                    btn.style.opacity = '0.7';
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                }
                 dispararSubmitLimpo(this);
             });
         }
     });
 
     function dispararSubmitLimpo(form) {
+        // Proteção contra envio duplo (Enter + Blur ao mesmo tempo)
+        if (form.dataset.isSubmitting === 'true') return;
+        form.dataset.isSubmitting = 'true';
+
+        // Feedback Visual (Bloqueia botão e mostra loading)
+        const btn = form.querySelector('button[type="submit"]');
+        if (btn) {
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            // Se o botão não tiver ícone, coloca um spinner, senão mantém o layout
+            if (!btn.innerHTML.includes('fa-spinner')) {
+                // Salva largura para não pular
+                const width = btn.offsetWidth;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                btn.style.width = width + 'px';
+            }
+        }
+
         const inputs = form.querySelectorAll('.money-mask');
         inputs.forEach(input => {
             if(input.value) {
@@ -57,6 +84,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 input.removeAttribute('name');
             }
         });
+        
         form.submit();
     }
 
@@ -65,25 +93,20 @@ document.addEventListener("DOMContentLoaded", function() {
     const selCat = document.getElementById('select-categoria');
     
     if (selTipo && selCat) {
-        // Pega o valor que veio do banco (apenas para EDIÇÃO)
-        // Se for novo cadastro, isso será vazio.
         const categoriaPreSelecionada = selCat.value; 
 
         function atualizarSelect(ehCarregamentoInicial = false) {
             const tipoTransacao = selTipo.value;
             
-            // 1. LIMPA TUDO PRIMEIRO
             selCat.innerHTML = '';
 
-            // 2. OPÇÃO PADRÃO DE SEGURANÇA (Sempre aparece primeiro)
             const defaultOption = document.createElement('option');
             defaultOption.value = "";
             defaultOption.text = "--- Selecione a Categoria ---";
-            defaultOption.disabled = true; // O usuário não pode clicar para "escolher" vazio
-            defaultOption.selected = true; // Mas ela começa selecionada visualmente
+            defaultOption.disabled = true; 
+            defaultOption.selected = true; 
             selCat.appendChild(defaultOption);
 
-            // 3. SE NÃO TIVER TIPO, BLOQUEIA E PARA
             if (!tipoTransacao) {
                 defaultOption.text = "← Escolha o tipo antes";
                 selCat.disabled = true;
@@ -91,7 +114,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 return;
             }
 
-            // 4. SE TIVER TIPO, LIBERA E FILTRA
             selCat.disabled = false;
             selCat.style.backgroundColor = "#fff";
             
@@ -113,24 +135,19 @@ document.addEventListener("DOMContentLoaded", function() {
                     defaultOption.text = "--- Nenhuma categoria encontrada ---";
                 }
 
-                // 5. LÓGICA DE PREENCHIMENTO (Só seleciona se for EDIÇÃO)
                 if (ehCarregamentoInicial && categoriaPreSelecionada) {
-                    // Verifica se a categoria salva ainda é compatível com o filtro atual
                     const existe = catsFiltradas.some(c => c.id == categoriaPreSelecionada);
                     if (existe) {
                         selCat.value = categoriaPreSelecionada;
                     }
                 }
-                // Se NÃO for edição (novo), ele mantém a defaultOption selecionada
             }
         }
         
         selTipo.addEventListener('change', function() {
-            // Quando troca o tipo manualmente, força reset (passa false)
             atualizarSelect(false);
         });
         
-        // No carregamento da página, tenta recuperar valor (passa true)
         atualizarSelect(true);
     }
 });

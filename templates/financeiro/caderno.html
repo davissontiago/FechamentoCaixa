@@ -51,7 +51,7 @@
             <div class="saldo-block final">
                 <div class="saldo-label green"><i class="fas fa-money-bill-wave"></i> Sobrou no final:</div>
                 <div class="saldo-input">
-                    <input type="text" inputmode="numeric" name="saldo_final_fisico" id="saldo-final" class="money-mask" value="{{ fechamento.saldo_final_fisico|stringformat:'.2f' }}">
+                    <input type="text" inputmode="numeric" name="saldo_final" id="saldo-final" class="money-mask" value="{{ fechamento.saldo_final|stringformat:'.2f' }}">
                 </div>
             </div>
         </form>
@@ -61,7 +61,7 @@
                 <div class="resumo-row"><span>(+) Vendas Cartão/Pix</span><span style="color: #60a5fa;" id="val-cartao">R$ {{ totais.cartao }}</span></div>
                 <div class="resumo-row"><span>(i) Suprimentos (Reforço)</span><span style="color: #a78bfa;" id="val-entrada-esp">R$ {{ totais.entradas_esp }}</span></div>
                 <div class="resumo-row"><span>(+) Vendas Dinheiro (Calc)</span><span style="color: #fbbf24;" id="val-dinheiro-calc">R$ {{ totais.dinheiro_miudo }}</span></div>
-                <div class="resumo-footer" id="txt-formula">*Dinheiro = ({{ totais.retiradas }} Saídas + {{ fechamento.saldo_final_fisico }} Sobrou) - ({{ fechamento.saldo_inicial }} Início + {{ totais.entradas_esp }} Suprimentos)</div>
+                <div class="resumo-footer" id="txt-formula">*Dinheiro = ({{ totais.retiradas }} Saídas + {{ fechamento.saldo_final }} Sobrou) - ({{ fechamento.saldo_inicial }} Início + {{ totais.entradas_esp }} Suprimentos)</div>
                 <div class="resumo-total"><span>Receita Total (Vendas)</span><span id="val-geral">R$ {{ totais.geral }}</span></div>
             </div>
 

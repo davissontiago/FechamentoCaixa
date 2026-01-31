@@ -1,31 +1,171 @@
-.dashboard-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 15px; padding: 20px;
+/* === CABEÇALHO DO RESUMO (FILTROS) === */
+.resumo-header {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.filter-form {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
+.filter-form .form-group {
+    flex: 1;
+    margin-bottom: 0; /* Remove margem padrão */
+}
+
+.filter-form label {
+    font-size: 0.8rem;
+    color: #666;
+    display: block;
+    margin-bottom: 4px;
+}
+
+/* Ajuste específico para os inputs de data neste form */
+.filter-form input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+.btn-filter {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    height: 38px; /* Altura para alinhar com inputs */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.btn-filter:hover {
+    background-color: var(--primary-hover);
+}
+
+/* === GRID DE KPI (INDICADORES) === */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
 .kpi-card {
-    background: white; padding: 15px;
+    background: white;
+    padding: 15px;
     border-radius: 12px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     text-align: center;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-}
-.kpi-card.full-width { grid-column: span 2; }
-
-.kpi-label { font-size: 0.8rem; color: #6b7280; margin-bottom: 5px; }
-.kpi-value { font-size: 1.1rem; font-weight: bold; color: #1f2937; }
-.kpi-icon { font-size: 1.5rem; margin-bottom: 10px; }
-
-.chart-container {
-    background: white; padding: 15px;
-    margin: 0 20px 20px 20px;
-    border-radius: 12px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
-.chart-title {
-    font-size: 0.9rem; font-weight: bold; color: #374151;
-    margin-bottom: 15px; border-left: 4px solid var(--primary);
+.kpi-label {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.kpi-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #333;
+}
+
+/* KPI Principal (Largura Total) */
+.kpi-full {
+    grid-column: 1 / -1;
+    background: var(--primary);
+    color: white;
+}
+
+.kpi-full .kpi-label {
+    color: rgba(255,255,255,0.8);
+}
+
+.kpi-full .kpi-value {
+    color: white;
+    font-size: 1.4rem;
+}
+
+/* === TABELAS DE DETALHAMENTO === */
+.section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 25px 0 10px 0;
+    color: #444;
+    border-left: 4px solid var(--primary);
     padding-left: 10px;
 }
+
+.cat-table {
+    width: 100%;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    border-collapse: collapse;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-bottom: 15px;
+}
+
+.cat-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+.cat-table tr:last-child td {
+    border-bottom: none;
+}
+
+.cat-val {
+    text-align: right;
+    font-weight: 600;
+    white-space: nowrap; /* Evita quebra de linha no valor */
+}
+
+/* Barras de Progresso */
+.bar-container {
+    height: 4px;
+    background: #f0f0f0;
+    border-radius: 2px;
+    margin-top: 5px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 2px;
+}
+
+.empty-msg {
+    text-align: center;
+    padding: 10px;
+    color: #999;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* === CORES UTILITÁRIAS === */
+.text-warning { color: #fbbf24; }
+.text-blue { color: #60a5fa; }
+.text-danger { color: #ef4444; }
+.text-success { color: #10b981; }
+.text-purple { color: #a78bfa; }
+
+.bg-blue { background-color: #60a5fa; }
+.bg-red { background-color: #ef4444; }
+.bg-purple { background-color: #a78bfa; }

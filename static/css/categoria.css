@@ -1,70 +1,14 @@
-/* === FORMULÁRIO RÁPIDO (TOPO) === */
-.add-cat-section {
-    background: #fff;
-    padding: 20px;
-    margin: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
+/* static/css/categorias.css */
 
-.add-cat-section h3 {
-    margin: 0 0 15px 0;
-    font-size: 1rem;
-    color: var(--text-dark);
-}
-
-.form-inline {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.form-group-inline {
-    margin: 0;
-}
-
-.form-group-inline.flex-grow {
-    flex: 1; /* O input de nome ocupa o espaço restante */
-}
-
-/* Ajuste nos inputs que vem do form.css para caberem na linha */
-.form-inline select, 
-.form-inline input {
-    margin: 0 !important;
-    height: 45px; /* Altura fixa para alinhar botão */
-}
-
-.btn-add {
-    height: 45px;
-    width: 45px;
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    transition: background 0.2s;
-}
-
-.btn-add:hover {
-    background-color: var(--primary-hover);
-}
-
-/* === LISTA DE CATEGORIAS === */
 .cat-list-container {
-    padding: 0 20px 100px 20px;
+    padding: 20px;
+    padding-bottom: 100px;
 }
 
-.list-title {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 600;
+.cat-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
 }
 
 .cat-card {
@@ -74,32 +18,32 @@
     display: flex;
     align-items: center;
     transition: background 0.2s;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
-
-.cat-card:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
-.cat-card:last-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; border-bottom: none; }
 
 .cat-card:hover {
     background-color: #f9fafb;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* Ícone Colorido */
 .cat-icon {
-    width: 35px;
-    height: 35px;
-    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-right: 15px;
-    font-size: 0.9rem;
+    font-size: 1rem;
+    flex-shrink: 0;
 }
 
 .c-green { background: #d1fae5; color: var(--success); }
 .c-red { background: #fee2e2; color: var(--danger); }
 .c-blue { background: #dbeafe; color: var(--primary); }
 
-/* Texto */
 .cat-info {
     flex: 1;
     display: flex;
@@ -112,46 +56,81 @@
 }
 
 .cat-type {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
 }
 
-/* Ações (Editar/Excluir) */
-.cat-actions {
+.cat-chevron {
+    color: #d1d5db;
+    font-size: 0.9rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #9ca3af;
+}
+
+.fab-btn {
+    position: fixed; 
+    bottom: 25px;
+    left: 50%; 
+    transform: translateX(-50%);
+    width: 60px; height: 60px;
+    background-color: var(--success); 
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; 
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    text-decoration: none; 
+    z-index: 1000;
+}
+
+/* static/css/categoria.css */
+
+.cat-list-container {
+    padding: 20px;
+    padding-bottom: 100px;
+}
+
+/* === BOTÕES DE FILTRO (NOVO) === */
+.filter-btns {
     display: flex;
     gap: 10px;
+    margin-bottom: 20px;
+    overflow-x: auto; /* Permite rolar horizontalmente no celular */
+    padding-bottom: 5px;
+    /* Esconde barra de rolagem feia */
+    scrollbar-width: none; 
+    -ms-overflow-style: none;
+}
+.filter-btns::-webkit-scrollbar { display: none; }
+
+.filter-btn {
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: white;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: all 0.2s;
 }
 
-.btn-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: background 0.2s;
+.filter-btn:hover {
+    background-color: #f9fafb;
 }
 
-.btn-icon.edit {
-    color: #3b82f6;
-    background: #eff6ff;
+.filter-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    font-weight: 600;
 }
 
-.btn-icon.delete {
-    color: #ef4444;
-    background: #fef2f2;
-}
-
-.btn-icon:hover {
-    opacity: 0.8;
-}
-
-/* Responsivo para celular muito pequeno */
-@media (max-width: 360px) {
-    .form-inline {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .btn-add { width: 100%; }
-}
+/* ... (MANTENHA O RESTANTE DO SEU CSS DE CATEGORIA AQUI) ... */
+.cat-card-link { text-decoration: none; color: inherit; display: block; }
+/* ... */

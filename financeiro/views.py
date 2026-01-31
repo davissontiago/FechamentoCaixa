@@ -320,19 +320,11 @@ def resumo_financeiro(request):
 
 @login_required
 def gerenciar_categorias(request):
-    """
-    Lista todas as categorias cadastradas.
-    URL: /categorias/
-    """
     categorias = Categoria.objects.all().order_by('nome')
-    return render(request, 'categorias/categorias.html', {'categorias': categorias})
+    return render(request, 'financeiro/categoria/categorias.html', {'categorias': categorias})
 
 @login_required
 def salvar_categoria(request):
-    """
-    Cria uma NOVA categoria.
-    URL: /categorias/nova/
-    """
     if request.method == 'POST':
         form = CategoriaForm(request.POST)
         if form.is_valid():
@@ -341,18 +333,13 @@ def salvar_categoria(request):
     else:
         form = CategoriaForm()
     
-    # Reutiliza o template de form genérico
-    return render(request, 'categorias/form.html', {
+    return render(request, 'financeiro/categoria/form.html', {
         'form': form,
         'titulo': 'Nova Categoria'
     })
 
 @login_required
 def editar_categoria(request, id):
-    """
-    Edita uma categoria EXISTENTE.
-    URL: /categorias/editar/<id>/
-    """
     categoria = get_object_or_404(Categoria, id=id)
     
     if request.method == 'POST':
@@ -363,8 +350,7 @@ def editar_categoria(request, id):
     else:
         form = CategoriaForm(instance=categoria)
     
-    # Reutiliza o mesmo template, passando o objeto 'categoria' para habilitar o botão excluir se necessário
-    return render(request, 'categorias/form.html', {
+    return render(request, 'financeiro/categoria/form.html', {
         'form': form,
         'titulo': 'Editar Categoria',
         'categoria': categoria

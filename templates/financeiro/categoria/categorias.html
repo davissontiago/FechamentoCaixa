@@ -4,7 +4,7 @@
 {% block title %}Categorias{% endblock %}
 
 {% block extra_head %}
-    <link rel="stylesheet" href="{% static 'css/categorias.css' %}">
+    <link rel="stylesheet" href="{% static 'css/categoria.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -17,9 +17,16 @@
 
     <div class="cat-list-container">
         
+        <div class="filter-btns">
+            <button class="filter-btn active" data-filter="all">Todas</button>
+            <button class="filter-btn" data-filter="ENTRADA">Entradas</button>
+            <button class="filter-btn" data-filter="CARTAO">Cartão</button>
+            <button class="filter-btn" data-filter="SAIDA">Saídas</button>
+        </div>
+
         <div class="cat-list">
             {% for cat in categorias %}
-                <a href="{% url 'editar_categoria' cat.id %}" class="cat-card-link">
+                <a href="{% url 'editar_categoria' cat.id %}" class="cat-card-link" data-type="{{ cat.tipo }}">
                     <div class="cat-card">
                         <div class="cat-icon {% if cat.tipo == 'ENTRADA' %}c-green{% elif cat.tipo == 'SAIDA' %}c-red{% else %}c-blue{% endif %}">
                             {% if cat.tipo == 'ENTRADA' %} <i class="fas fa-arrow-up"></i>
@@ -30,7 +37,7 @@
                         <div class="cat-info">
                             <span class="cat-name">{{ cat.nome }}</span>
                             <span class="cat-type">
-                                {% if cat.tipo == 'ENTRADA' %}Entrada (Dinheiro)
+                                {% if cat.tipo == 'ENTRADA' %}Entrada
                                 {% elif cat.tipo == 'SAIDA' %}Saída
                                 {% else %}Cartão{% endif %}
                             </span>
@@ -44,7 +51,7 @@
             {% empty %}
                 <div class="empty-state">
                     <i class="fas fa-folder-open"></i>
-                    <p>Nenhuma categoria cadastrada.</p>
+                    <p>Nenhuma categoria.</p>
                 </div>
             {% endfor %}
         </div>
@@ -54,4 +61,9 @@
         <i class="fas fa-plus"></i>
     </a>
 </div>
+
+{% block extra_scripts %}
+    <script src="{% static 'js/categoria.js' %}"></script>
+{% endblock %}
+
 {% endblock %}
